@@ -1,157 +1,126 @@
-import { Link } from "react-router-dom";
-import { useForm } from '../../hooks/useForm'
-import { validateEmail, validatePassword } from '../../utils/validation'
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Navbar from '../Navbar/Navbar';
+import Footer from '../Footer/Footer';
 
 export default function Landing() {
-  const validateLogin = (values) => {
-    const errors = {}
-    const emailError = validateEmail(values.email)
-    const passwordError = validatePassword(values.password)
-    
-    if (emailError) errors.email = emailError
-    if (passwordError) errors.password = passwordError
-    
-    return errors
-  }
-
-  const {
-    values,
-    errors,
-    isSubmitting,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-  } = useForm(
-    { email: '', password: '', rememberMe: false },
-    validateLogin
-  )
-
-  const onSubmit = async (formData) => {
-    try {
-      // Add your login API call here
-      console.log('Login submitted:', formData)
-    } catch (error) {
-      throw new Error('Login failed. Please try again.')
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if user is logged in (assuming you store token in localStorage)
+    const token = localStorage.getItem('token'); // or however you store your auth state
+    if (token) {
+      navigate('/dashboard'); // or whatever your authenticated home route is
     }
-  }
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-red-400">
-      {/* Logo - made responsive */}
-      <div className="absolute top-4 sm:top-8 left-4 sm:left-8">
-        <Link to="/" className="text-white text-xl sm:text-2xl font-bold">
-          Tide Transform
-        </Link>
-      </div>
-
-      {/* Login Card - enhanced responsiveness */}
-      <div className="min-h-screen flex items-center justify-center p-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md mx-auto">
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
-            Sign in to your account
-          </h1>
-
-          {errors.submit && (
-            <div className="mb-4 p-3 bg-red-50 text-red-500 rounded-md text-sm">
-              {errors.submit}
-            </div>
-          )}
-
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            handleSubmit(onSubmit)
-          }} className="space-y-4 sm:space-y-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm text-gray-700 mb-2"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={values.email}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="relative">
-              <div className="flex justify-between items-center mb-2">
-                <label
-                  htmlFor="password"
-                  className="block text-sm text-gray-700"
-                >
-                  Password
-                </label>
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+              <span className="block">Smarter Document Parsing,</span>
+              <span className="block text-indigo-600">Enhanced with Intelligence</span>
+            </h1>
+            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+              Transform your invoice and RFQ processing with our dual-powered parsing platform. Choose between Pattern Detection for consistency or 3S AI for adaptive intelligence.
+            </p>
+            <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+              <div className="rounded-md shadow">
                 <Link
-                  to="/forgot-password"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                  to="/signup"
+                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
                 >
-                  Forgot your password?
+                  Start now
                 </Link>
               </div>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={values.password}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-500">{errors.password}</p>
-              )}
+              <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
+                <Link
+                  to="/contact"
+                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                >
+                  Contact sales
+                </Link>
+              </div>
             </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="remember-me"
-                checked={values.rememberMe}
-                onChange={(e) => handleChange(e)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-700"
-              >
-                Remember me on this device
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 text-center">
-            <p className="text-xs sm:text-sm text-gray-600">
-              New to Tide Transform?{" "}
-              <Link to="/signup" className="text-indigo-600 hover:text-indigo-500">
-                Create account
-              </Link>
-            </p>
           </div>
         </div>
       </div>
+
+      {/* Features Section */}
+      <div className="py-16 bg-gray-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">
+              Dual Parsing Solutions
+            </h2>
+            <p className="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Choose Your Perfect Parsing Method
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="text-indigo-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Pattern Detection Parsing</h3>
+              <p className="text-gray-600">Cost-effective solution for consistent document formats with predefined rules and patterns.</p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="text-indigo-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">3S AI Parsing</h3>
+              <p className="text-gray-600">Smart, Scalable, Self-Learning AI for complex document structures and adaptive processing.</p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="text-indigo-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Real-time Analytics</h3>
+              <p className="text-gray-600">Track parsing performance, usage metrics, and AI learning progress through our comprehensive dashboard.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-indigo-700">
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <span className="block">Ready to transform your document processing?</span>
+            <span className="block text-indigo-200">Try our interactive demos today.</span>
+          </h2>
+          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+            <div className="inline-flex rounded-md shadow">
+              <Link
+                to="/signup"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
+              >
+                Get started
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
     </div>
   );
 }
