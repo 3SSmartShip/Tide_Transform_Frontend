@@ -1,18 +1,16 @@
 const env = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-  API_KEY: import.meta.env.VITE_API_KEY,
-  ENV: import.meta.env.VITE_ENV,
+  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  APP_URL: import.meta.env.VITE_APP_URL || 'http://localhost:5173',
   IS_DEV: import.meta.env.DEV,
-  IS_PROD: import.meta.env.PROD,
 }
 
 // Validate required environment variables
-const requiredEnvVars = ['API_BASE_URL', 'API_KEY']
-
-requiredEnvVars.forEach(key => {
-  if (!env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`)
+const requiredVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+requiredVars.forEach(varName => {
+  if (!env[varName]) {
+    console.error(`Missing required environment variable: ${varName}`);
   }
-})
+});
 
-export default env 
+export default env; 

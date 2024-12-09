@@ -7,3 +7,8 @@
     @apply bg-slate-900 text-white;
   }
 } 
+
+:root {
+  --color-ai: hsl(var(--chart-1));
+  --color-static: hsl(var(--chart-2));
+}

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../config/supabaseClient';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../../config/supabaseClient";
 
 export default function SignUp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function SignUp() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -23,13 +23,14 @@ export default function SignUp() {
         },
       });
 
-      if (error) {
-        setError(error.message);
-      } else if (data.user) {
-        navigate('/confirm-email');
+      if (signUpError) throw signUpError;
+
+      if (data?.user) {
+        navigate("/confirm-email");
       }
     } catch (error) {
-      setError('An error occurred during sign-up');
+      console.error("SignUp error:", error);
+      setError(error.message || "An error occurred during sign-up");
     } finally {
       setLoading(false);
     }
@@ -50,14 +51,17 @@ export default function SignUp() {
           </h1>
 
           {error && (
-            <div className="p-4 rounded-md bg-red-50 text-red-800">
-              {error}
+            <div className="p-4 mb-4 rounded-md bg-red-50 text-red-800">
+              <p className="text-sm font-medium">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSignUp} className="space-y-4 sm:space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm text-gray-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -68,11 +72,15 @@ export default function SignUp() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent border-gray-300"
                 placeholder="your@email.com"
+                required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm text-gray-700 mb-2"
+              >
                 Password
               </label>
               <input
@@ -83,27 +91,9 @@ export default function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent border-gray-300"
                 placeholder="••••••••"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 required
+                minLength={6}
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the{' '}
-                <Link to="/terms" className="text-indigo-600 hover:text-indigo-500">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="text-indigo-600 hover:text-indigo-500">
-                  Privacy Policy
-                </Link>
-              </label>
             </div>
 
             <button
@@ -111,14 +101,17 @@ export default function SignUp() {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
           <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 text-center">
             <p className="text-xs sm:text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-500">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-indigo-600 hover:text-indigo-500"
+              >
                 Sign in
               </Link>
             </p>
@@ -127,4 +120,4 @@ export default function SignUp() {
       </div>
     </div>
   );
-} 
+}

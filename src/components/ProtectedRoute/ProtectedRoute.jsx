@@ -11,7 +11,10 @@ export default function ProtectedRoute({ children }) {
     checkUser();
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
-        navigate('/login');
+        setUser(null);
+        navigate('/');
+      } else if (event === 'SIGNED_IN') {
+        setUser(session?.user || null);
       }
     });
 
@@ -26,6 +29,7 @@ export default function ProtectedRoute({ children }) {
       setUser(user);
     } catch (error) {
       console.error('Error checking user:', error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -43,7 +47,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

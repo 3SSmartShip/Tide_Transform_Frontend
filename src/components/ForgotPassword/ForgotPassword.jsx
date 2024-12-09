@@ -17,21 +17,17 @@ export default function ForgotPassword() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      if (error) {
-        setStatus({
-          type: 'error',
-          message: error.message,
-        });
-      } else {
-        setStatus({
-          type: 'success',
-          message: 'Password reset instructions have been sent to your email.',
-        });
-      }
+      if (error) throw error;
+
+      setStatus({
+        type: 'success',
+        message: 'Password reset instructions have been sent to your email.',
+      });
     } catch (error) {
+      console.error('Password reset error:', error);
       setStatus({
         type: 'error',
-        message: 'An error occurred. Please try again later.',
+        message: error.message || 'An error occurred. Please try again later.',
       });
     } finally {
       setIsLoading(false);
@@ -39,50 +35,41 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-red-400">
-      <div className="absolute top-4 sm:top-8 left-4 sm:left-8">
-        <Link to="/" className="text-white text-xl sm:text-2xl font-bold">
-          Tide Transform
-        </Link>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Reset your password
+        </h2>
       </div>
 
-      <div className="min-h-screen flex items-center justify-center p-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md mx-auto">
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
-            Reset your password
-          </h1>
-          
-          <p className="text-sm text-gray-600 mb-6">
-            Enter your email address and we'll send you instructions to reset your password.
-          </p>
-
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {status.message && (
             <div
-              className={`p-4 rounded-md mb-6 ${
-                status.type === 'success' 
-                  ? 'bg-green-50 text-green-800' 
-                  : 'bg-red-50 text-red-800'
+              className={`mb-4 p-4 rounded-md ${
+                status.type === 'error' ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'
               }`}
             >
-              {status.message}
+              <p className="text-sm font-medium">{status.message}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm text-gray-700 mb-2">
-                Email
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
               </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent border-gray-300"
-                placeholder="your@email.com"
-                required
-              />
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
             </div>
 
             <button
@@ -94,13 +81,10 @@ export default function ForgotPassword() {
             </button>
           </form>
 
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 text-center">
-            <p className="text-xs sm:text-sm text-gray-600">
-              Remember your password?{' '}
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-500">
-                Sign in
-              </Link>
-            </p>
+          <div className="mt-4 text-center">
+            <Link to="/login" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+              Return to login
+            </Link>
           </div>
         </div>
       </div>

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '../../config/supabaseClient';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isLoggedIn = false; // Replace with your auth state logic
 
   const navigation = [
@@ -12,6 +14,16 @@ export default function Navbar() {
     { name: 'Pricing', href: '/pricing' },
     { name: 'About', href: '/about' },
   ];
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/'); // Redirect to landing page after sign out
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm fixed w-full z-50">
@@ -55,7 +67,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-                  onClick={() => {/* Add logout logic */}}
+                  onClick={handleSignOut}
                 >
                   Logout
                 </button>
@@ -140,16 +152,13 @@ export default function Navbar() {
                 <Link
                   to="/dashboard"
                   className="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={handleSignOut}
                 >
                   Dashboard
                 </Link>
                 <button
                   className="block w-full text-left pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    /* Add logout logic */
-                  }}
+                  onClick={handleSignOut}
                 >
                   Logout
                 </button>
