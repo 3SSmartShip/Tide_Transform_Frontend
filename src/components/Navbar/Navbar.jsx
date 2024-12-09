@@ -6,7 +6,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const isLoggedIn = false; // Replace with your auth state logic
+  const isLoggedIn = false; 
 
   const navigation = [
     { name: 'Home', href: '/' },
