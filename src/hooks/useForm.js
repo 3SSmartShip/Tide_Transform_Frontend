@@ -54,4 +54,4 @@ export const useForm = (initialState, validate) => {
     handleBlur,
     handleSubmit,
   }
-} 
+}

@@ -1,9 +1,11 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
 import LandingComponent from '../components/Landing/Landing'
 
-export default function Landing() {
+const LandingPage = () => {
   return (
-    <div>
-      <LandingComponent />
-    </div>
-  )
-}
+    <LandingComponent/>
+  );
+};
+
+export default LandingPage;

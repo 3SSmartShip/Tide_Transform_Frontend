@@ -1,50 +1,55 @@
 import axios from 'axios'
+import { createClient } from '@supabase/supabase-js'
 import env from '../config/env'
+import { logError } from '../utils/environment'
 
-// Create axios instance with default config
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+const getAccessToken = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token
+}
+
 const api = axios.create({
-  baseURL: env.API_BASE_URL,
-  timeout: 10000,
+  baseURL: env.TIDE_TRANSFORM_BASE_URL,
+  timeout: 30000,
   headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': env.API_KEY,
-  },
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
 })
 
-// Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Add environment-specific headers
-    if (env.IS_DEV) {
-      config.headers['X-Environment'] = 'development'
+  async (config) => {
+    const token = await getAccessToken()
+    if (!token) {
+      throw new Error('Authentication required')
     }
-    
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+    config.headers.Authorization = `Bearer ${token}`
     return config
   },
   (error) => {
+    logError(error)
     return Promise.reject(error)
   }
 )
 
-// Response interceptor
 api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    // Add environment-specific error handling
-    if (env.IS_DEV) {
-      console.error('API Error:', error)
-    }
-    
+  (response) => response,
+  async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      const token = await getAccessToken()
+      if (token) {
+        error.config.headers.Authorization = `Bearer ${token}`
+        return axios(error.config)
+      }
     }
+    logError(error)
     return Promise.reject(error)
   }
 )
 
-export default api 
+export default api
