@@ -1,0 +1,74 @@
+  import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import SignUp from "./components/Signup/Signup";
+import Dashboard from "./pages/Dashboard";
+import Upload from "./components/Upload/Upload";
+import ForgotPassword from "./pages/ForgotPassword";
+import ConfirmEmail from "./components/ConfirmEmail/ConfirmEmail";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import Api from "./components/Api_component/Api";
+import Billing from "./components/Billing/Billing";
+import Setting from "./components/Setting/Setting";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/confirm-email" element={<ConfirmEmail />} />
+
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/upload" element={
+          <ProtectedRoute>
+            <Upload />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/api" element={
+          <ProtectedRoute>
+            <Api />
+          </ProtectedRoute>
+        } />
+        <Route path="/billings" element={
+          <ProtectedRoute>
+            <Billing />
+          </ProtectedRoute>
+        } />
+        <Route path="/billings/plan" element={
+          <ProtectedRoute>
+            <Billing />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Setting />
+          </ProtectedRoute>
+        } />
+
+        {/* 404 Route */}
+        <Route path="*" element={
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900">404</h1>
+              <p className="mt-2 text-lg text-gray-600">Page not found</p>
+              <a href="/" className="mt-4 inline-block text-indigo-600 hover:text-indigo-500">
+                Go back home
+              </a>
+            </div>
+          </div>
+        } />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
