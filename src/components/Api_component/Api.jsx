@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { Copy, Trash2 } from 'lucide-react'
+import { Copy, Trash2, Check } from 'lucide-react'
 import { motion } from "framer-motion"
 import CreateApiModal from '../CreateApiModel/CreateApiModel'
 import { apiKeysService } from '../../api/services/apiKeys'
@@ -9,6 +9,8 @@ export default function ApiDashboard() {
   const [apis, setApis] = useState([])
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [visibilityTimers, setVisibilityTimers] = useState({})
+  const [copiedStates, setCopiedStates] = useState({})
 
   const fetchApiKeys = useCallback(async () => {
     setIsLoading(true)
@@ -33,14 +35,54 @@ export default function ApiDashboard() {
   }
 
   const toggleVisibility = (id) => {
-    setApis(currentApis => currentApis.map(api => 
-      api.id === id ? { ...api, visible: !api.visible } : api
-    ))
+    setApis(currentApis => currentApis.map(api => {
+      if (api.id === id) {
+        // Show API key
+        const isCurrentlyVisible = !api.visible
+        if (isCurrentlyVisible) {
+          // Set timer to hide after 10 seconds
+          const timer = setTimeout(() => {
+            setApis(apis => apis.map(a => 
+              a.id === id ? { ...a, visible: false } : a
+            ))
+          }, 10000)
+          setVisibilityTimers(prev => ({ ...prev, [id]: timer }))
+        } else {
+          // Clear timer if hiding manually
+          clearTimeout(visibilityTimers[id])
+          setVisibilityTimers(prev => {
+            const newTimers = { ...prev }
+            delete newTimers[id]
+            return newTimers
+          })
+        }
+        return { ...api, visible: isCurrentlyVisible }
+      }
+      return api
+    }))
   }
 
-  const copyToClipboard = async (key) => {
-    await navigator.clipboard.writeText(key)
-    // Add toast notification here if desired
+  const copyToClipboard = async (id, key) => {
+    try {
+      // Ensure key is a string
+      const apiKeyString = String(key)
+      await navigator.clipboard.writeText(apiKeyString)
+      
+      setCopiedStates(prev => ({ ...prev, [id]: true }))
+      setApis(currentApis => currentApis.map(api => 
+        api.id === id ? { ...api, visible: true } : api
+      ))
+
+      setTimeout(() => {
+        setApis(apis => apis.map(a => 
+          a.id === id ? { ...a, visible: false } : a
+        ))
+        setCopiedStates(prev => ({ ...prev, [id]: false }))
+      }, 10000)
+
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
   }
 
   const deleteApi = async (id) => {
@@ -100,7 +142,6 @@ export default function ApiDashboard() {
                         >
                           <Copy className="h-4 w-4 text-zinc-500 hover:text-zinc-400" />
                         </button>
-                        {/* Show/Hide button removed */}
                       </div>
                     </td>
                     <td className="py-4 text-zinc-400">
@@ -137,6 +178,5 @@ export default function ApiDashboard() {
         )}
       </div>
     </Layout>
-  )
-}
+  )}
 

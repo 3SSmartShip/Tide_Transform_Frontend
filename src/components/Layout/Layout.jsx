@@ -24,7 +24,7 @@ export default function Layout({ children }) {
 
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
-    { path: '/documents', icon: FileText, label: 'All Documents' },
+    { path: '/dashboard/documents', icon: FileText, label: 'All Documents' },
     { path: '/billings', icon: Wallet, label: 'Billings' },
     { path: '/dashboard/api', icon: FileText, label: 'API' },
     { path: '/settings', icon: Settings, label: 'Setting' },
