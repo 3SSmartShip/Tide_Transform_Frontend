@@ -7,20 +7,31 @@ import {
   BarChart,
   CartesianGrid,
   XAxis,
+  YAxis,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
 import { motion } from "framer-motion";
 import Layout from '../Layout/Layout';
+import { dashboardStatsService } from '../../api/services/dashboardStats';
+import AllDocuments from '../AllDocuments/AllDocuments';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  // State declarations
   const [usageData, setUsageData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const [isNavigating, setIsNavigating] = useState(false);
+  const [metrics, setMetrics] = useState([
+    { label: "Total Pages", value: 0 },
+    { label: "API Created", value: 0 },
+    { label: "Pattern Detection Parsing", value: 0 },
+    { label: "3S AI Parsing", value: 0 },
+  ]);
+
+  const navigate = useNavigate();
 
   const handleNavigation = useCallback((path) => {
     setIsNavigating(true);
@@ -36,43 +47,43 @@ export default function Dashboard() {
     handleNavigation('/dashboard/api');
   };
 
+  const handleDocumentsClick = useCallback(() => {
+    navigate('/dashboard/documents');
+  }, [navigate]);
+
+  // Function declarations
   async function getUsageFrequency(timePeriod = 'week') {
+    const now = new Date();
+    let startDate = new Date();
+
+    // Configure date ranges based on period
+    switch(timePeriod) {
+      case 'day':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+        break;
+      case 'week':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+        break;
+    }
+
+    // Format to exact ISO 8601 specification
+    const startTime = startDate.toISOString().split('.')[0] + 'Z';  // 2024-01-01T00:00:00Z format
+    const endTime = now.toISOString().split('.')[0] + 'Z';         // 2024-01-31T23:59:59Z format
+
     try {
-      const now = new Date();
-      let startDate = new Date();
-
-      switch(timePeriod) {
-        case 'day':
-          startDate.setDate(now.getDate() - 7);
-          break;
-        case 'week':
-          startDate.setDate(now.getDate() - 30);
-          break;
-        case 'month':
-          startDate.setDate(now.getDate() - 90);
-          break;
-        default:
-          startDate.setDate(now.getDate() - 30);
-      }
-
       const { data, error } = await supabase
         .from('usagelogs')
         .select('*')
-        .gte('createdAt', startDate.toISOString())
-        .lte('createdAt', now.toISOString())
+        .gte('createdAt', startTime)
+        .lte('createdAt', endTime)
         .order('createdAt', { ascending: false });
 
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!data) {
-        console.log('No data returned from query');
-        return { data: [], count: 0 };
-      }
-
-      const groupedData = data.reduce((acc, item) => {
+      const groupedData = data?.reduce((acc, item) => {
         let dateKey;
         const itemDate = new Date(item.createdAt);
 
@@ -81,9 +92,9 @@ export default function Dashboard() {
             dateKey = itemDate.toISOString().split('T')[0];
             break;
           case 'week':
-            const startOfWeek = new Date(itemDate);
-            startOfWeek.setDate(itemDate.getDate() - itemDate.getDay());
-            dateKey = startOfWeek.toISOString().split('T')[0];
+            const weekStart = new Date(itemDate);
+            weekStart.setDate(itemDate.getDate() - itemDate.getDay());
+            dateKey = weekStart.toISOString().split('T')[0];
             break;
           case 'month':
             dateKey = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
@@ -120,47 +131,45 @@ export default function Dashboard() {
           })
         }));
 
-      console.log('Processed chart data:', chartData);
-
       return {
         data: chartData,
-        count: data.length
+        count: data?.length || 0
       };
 
     } catch (error) {
-      console.error('Error in getUsageFrequency:', error);
+      console.error('Error fetching usage data:', error);
       throw error;
     }
   }
-
+  // useEffect
+  // Update the useEffect for fetching dashboard data
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboardData = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        const result = await getUsageFrequency(selectedPeriod);
-        setUsageData(result.data);
-        setTotalCount(result.count);
+        setLoading(true)
+        const activityData = await dashboardStatsService.getActivityStats(selectedPeriod)
+      
+        const chartData = activityData.activities.map(item => ({
+          date: new Date(item.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+          }),
+          ai: item.ai_count || 0,
+          static: item.static_count || 0
+        }))
+
+        setUsageData(chartData)
       } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(error.message || 'Failed to load usage data');
-        setUsageData([]);
-        setTotalCount(0);
+        console.error('Error fetching activity data:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, [selectedPeriod]);
+    fetchDashboardData()
+  }, [selectedPeriod])
 
-  const metrics = [
-    { label: "Total Page", value: 0 },
-    { label: "API Created", value: 0 },
-    { label: "Pattern Detection Parsing", value: 0 },
-    { label: "3S AI Parsing", value: 0 },
-  ];
-
+  // Return statement inside the component function
   return (
     <Layout>
       <div className="space-y-6">
@@ -194,17 +203,32 @@ export default function Dashboard() {
           </div>
           <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={usageData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
+              <BarChart 
+                data={usageData}
+                style={{ backgroundColor: '#18181B' }}
+              >
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  vertical={false} 
+                  stroke="#374151" 
+                  opacity={0.1}
+                />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                  style={{ backgroundColor: '#18181B' }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                  style={{ backgroundColor: '#18181B' }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#111111",
+                    backgroundColor: "#1C2632",
                     border: "1px solid #374151",
                     borderRadius: "8px",
                     color: "#F3F4F6",
@@ -226,66 +250,22 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
         {/* Document History */}
         <div className="bg-zinc-900 rounded-lg overflow-hidden">
           <div className="p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
               <h2 className="text-xl font-semibold text-white">Document History</h2>
-              <button className="bg-gray-900 text-gray-300 px-3 py-2 rounded-md hover:bg-gray-800 flex items-center gap-2">
-                Filters
-              </button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleDocumentsClick}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                View All Documents
+              </motion.button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left border-b border-gray-800">
-                    <th className="pb-3 text-gray-400 font-medium">File Name</th>
-                    <th className="pb-3 text-gray-400 font-medium">File Size</th>
-                    <th className="pb-3 text-gray-400 font-medium">Last Modified</th>
-                    <th className="pb-3 text-gray-400 font-medium">Date Added</th>
-                    <th className="pb-3 text-gray-400 font-medium"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-4 text-white">Tech requirements.pdf</td>
-                    <td className="py-4 text-gray-300">200 KB</td>
-                    <td className="py-4 text-gray-300">Yesterday</td>
-                    <td className="py-4 text-gray-300">10 Dec 2024</td>
-                    <td className="py-4 text-gray-300">
-                      <div className="flex gap-2">
-                        <button className="p-1 hover:text-white"><FileText className="h-4 w-4" /></button>
-                        <button className="p-1 hover:text-white"><Upload className="h-4 w-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-4 text-white">Dashboard screenshot.jpg</td>
-                    <td className="py-4 text-gray-300">720 KB</td>
-                    <td className="py-4 text-gray-300">10 Dec 2024</td>
-                    <td className="py-4 text-gray-300">10 Dec 2024</td>
-                    <td className="py-4 text-gray-300">
-                      <div className="flex gap-2">
-                        <button className="p-1 hover:text-white"><FileText className="h-4 w-4" /></button>
-                        <button className="p-1 hover:text-white"><Upload className="h-4 w-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-4 text-white">Dashboard prototype recording.mp4</td>
-                    <td className="py-4 text-gray-300">16 MB</td>
-                    <td className="py-4 text-gray-300">10 Dec 2024</td>
-                    <td className="py-4 text-gray-300">10 Dec 2024</td>
-                    <td className="py-4 text-gray-300">
-                      <div className="flex gap-2">
-                        <button className="p-1 hover:text-white"><FileText className="h-4 w-4" /></button>
-                        <button className="p-1 hover:text-white"><Upload className="h-4 w-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="flex items-center justify-center py-12">
+              <p className="text-xl text-gray-400 font-medium">Coming Soon...</p>
             </div>
           </div>
         </div>
