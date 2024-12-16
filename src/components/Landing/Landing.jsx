@@ -76,15 +76,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-[40px] leading-tight font-bold mb-4">
-              Smarter <span className="text-[#7FFF00]">Document</span> Parsing
-              for Shipping,
-              <br />
-              Powered by Intelligence
+            TideTransform: Smarter Document Parsing, Enhanced with Intelligence
             </h1>
             <p className="text-gray-600 mb-6">
-              Streamline maritime document management with AI-driven precision.
-              <br />
-              Empowering the shipping industry for seamless operations!
+            TideTransform is a robust document parsing platform designed to streamline data extraction from Invoices and Request for Quotes (RFQs). It offers two distinct parsing approaches—Pattern Detection Parsing and 3S AI Parsing—enabling businesses to select the best solution for their unique document processing needs.
             </p>
             <button className="bg-[#0066FF] text-white px-6 py-2.5 rounded-md text-sm">
               Start 14-day free trial

@@ -10,6 +10,8 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Api from "./components/Api_component/Api";
 import Billing from "./components/Billing/Billing";
 import Setting from "./components/Setting/Setting";
+import OTPVerification from "./components/OTPVerification/OTPVerification";
+
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
+        <Route path="/verify-otp" element={<OTPVerification />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={
@@ -70,5 +73,4 @@ function App() {
     </Router>
   );
 }
-
 export default App;

@@ -10,7 +10,6 @@ export default function SignUp() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
   const handleSignUp = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -31,7 +30,8 @@ export default function SignUp() {
       if (signUpError) throw signUpError;
 
       if (data?.user) {
-        navigate("/confirm-email");
+        localStorage.setItem('userEmail', email);
+        navigate("/verify-otp");
       }
     } catch (error) {
       console.error("SignUp error:", error);
@@ -40,7 +40,6 @@ export default function SignUp() {
       setLoading(false);
     }
   };
-
   return (
     <div className="flex min-h-screen">
       {/* Left side */}

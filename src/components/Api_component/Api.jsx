@@ -100,16 +100,11 @@ export default function ApiDashboard() {
                         >
                           <Copy className="h-4 w-4 text-zinc-500 hover:text-zinc-400" />
                         </button>
-                        <button 
-                          onClick={() => toggleVisibility(api.id)}
-                          className="text-zinc-500 hover:text-zinc-400"
-                        >
-                          {api.visible ? 'Hide' : 'Show'}
-                        </button>
+                        {/* Show/Hide button removed */}
                       </div>
                     </td>
                     <td className="py-4 text-zinc-400">
-                      {new Date(api.created_at).toLocaleDateString()}
+                      {api.created_at ? new Date(api.created_at).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -144,3 +139,4 @@ export default function ApiDashboard() {
     </Layout>
   )
 }
+

@@ -41,11 +41,18 @@ export default function CreateApiModal({ isOpen, onClose, onApiKeyCreated }) {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="w-full max-w-lg bg-[#2A2F3C] rounded-lg p-8 mx-4"
+            className="w-full max-w-lg bg-[#2A2F3C] rounded-lg p-8 mx-4 relative"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-2xl font-semibold text-white mb-2">Create API Key</h2>
-            
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">
@@ -76,3 +83,4 @@ export default function CreateApiModal({ isOpen, onClose, onApiKeyCreated }) {
     </AnimatePresence>
   );
 }
+
