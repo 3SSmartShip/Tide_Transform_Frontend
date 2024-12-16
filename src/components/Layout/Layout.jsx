@@ -27,7 +27,7 @@ export default function Layout({ children }) {
     { path: '/dashboard/documents', icon: FileText, label: 'All Documents' },
     { path: '/billings', icon: Wallet, label: 'Billings' },
     { path: '/dashboard/api', icon: FileText, label: 'API' },
-    { path: '/settings', icon: Settings, label: 'Setting' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (

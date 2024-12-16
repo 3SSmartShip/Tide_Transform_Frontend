@@ -33,7 +33,7 @@ export default function Billing() {
 
   return (
     <Layout>
-      <div className="min-h-screen">
+      <div className="px-8 min-h-screen">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-white mb-6">Billings</h1>
           
