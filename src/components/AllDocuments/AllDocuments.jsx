@@ -5,7 +5,7 @@ import Layout from '../Layout/Layout'
 export default function AllDocuments() {
   return (
     <Layout>
-      <div className="h-screen px-8 flex flex-col">
+      <div className="h-[calc(100vh-80px)] px-8 flex flex-col">
         <h1 className="text-2xl font-semibold text-white mb-6">All Documents</h1>
         <motion.div
           initial={{ opacity: 0, y: 20 }}

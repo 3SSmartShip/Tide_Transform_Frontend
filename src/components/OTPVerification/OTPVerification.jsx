@@ -1,12 +1,27 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabaseClient";
 
 export default function OTPVerification() {
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Handle input change for each OTP digit
+  const handleChange = (element, index) => {
+    if (isNaN(element.value)) return false;
+
+    setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
+
+    // Focus next input
+    if (element.value && index < 5) {
+      const nextInput = element.parentElement.nextElementSibling?.querySelector('input');
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  };
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
@@ -15,12 +30,12 @@ export default function OTPVerification() {
 
     try {
       const email = localStorage.getItem('userEmail');
+      const otpString = otp.join('');
       
-      // Correct Supabase OTP verification method
       const { data, error: verificationError } = await supabase.auth.verifyOtp({
         email,
-        token: otp,
-        type: 'email'  // Changed from 'signup' to 'email'
+        token: otpString,
+        type: 'email'
       });
 
       if (verificationError) {
@@ -39,7 +54,6 @@ export default function OTPVerification() {
     }
   };
 
-  // Add resend verification email functionality
   const handleResendVerification = async () => {
     try {
       const email = localStorage.getItem('userEmail');
@@ -60,68 +74,72 @@ export default function OTPVerification() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <div className="hidden lg:flex lg:w-1/2 flex-col p-12">
-        <div className="flex items-center gap-2 mb-16">
-          <img src="/logo.svg" alt="TideTransform" className="h-8" />
-          <span className="text-xl font-semibold">TideTransform</span>
-        </div>
-        
-        <div className="flex-grow flex flex-col justify-center max-w-lg">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-white p-4">
+      {/* Back Button */}
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-16">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span className="text-black text-base">Back</span>
+      </button>
+
+      <div className="max-w-6xl mx-auto grid grid-cols-2 gap-8">
+        {/* Left Column */}
+        <div>
+          <h1 className="text-[32px] font-bold text-black mb-4">
             Verify Your Account
           </h1>
           <p className="text-gray-600">
-            We've sent a verification code to your email. Please enter it below to complete your registration.
+            We've sent a verification code to your email. please enter it below to complete your registration
           </p>
         </div>
-      </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8">
-        <div className="w-full max-w-md bg-[#EBF3FF] rounded-[20px] p-8">
-          <h2 className="text-2xl font-semibold text-gray-900">Enter Verification Code</h2>
-          <p className="mt-2 text-gray-600">Please check your email for the verification code</p>
+        {/* Right Column */}
+        <div className="bg-[#F5F7FF] rounded-[20px] p-8">
+          <h2 className="text-[24px] font-semibold text-black mb-2">
+            Enter Verification Code
+          </h2>
+          <p className="text-gray-600 mb-8">
+            No worries, we'll send you reset instructions.
+          </p>
 
-          <form onSubmit={handleVerifyOTP} className="mt-8 space-y-6">
-            <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
-                Verification Code*
-              </label>
-              <input
-                id="otp"
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter verification code"
-                required
-              />
+          <form onSubmit={handleVerifyOTP}>
+            <div className="flex gap-2 mb-6">
+              {otp.map((digit, index) => (
+                <div key={index} className="w-full">
+                  <input
+                    type="text"
+                    maxLength="1"
+                    value={digit}
+                    onChange={(e) => handleChange(e.target, index)}
+                    className="w-full h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              ))}
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {loading ? "Verifying..." : "Verify Code"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#0066FF] text-white py-4 rounded-lg font-medium text-base"
+            >
+              Verify Your Account
+            </button>
 
             {error && (
-              <div className="mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              <div className="mt-4 text-red-600 text-sm text-center">
                 {error}
               </div>
             )}
-            
-            {/* Add resend button */}
-            <div className="text-center mt-4">
+
+            <div className="mt-4 text-center">
+              <span className="text-gray-600">Didn't receive the code? </span>
               <button
                 type="button"
                 onClick={handleResendVerification}
-                className="text-blue-600 hover:text-blue-500 text-sm"
+                className="text-[#0066FF] font-normal"
               >
-                Resend verification code
+                Click to resend
               </button>
             </div>
           </form>

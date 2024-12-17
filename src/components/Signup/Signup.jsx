@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabaseClient";
+import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_bw.png";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -44,9 +45,12 @@ export default function SignUp() {
     <div className="flex min-h-screen">
       {/* Left side */}
       <div className="hidden lg:flex lg:w-1/2 flex-col p-12">
-        <div className="flex items-center gap-2 mb-16">
-          <img src="/logo.svg" alt="3S Smart Ship" className="h-8" />
-          <span className="text-xl font-semibold">Smart Ship</span>
+        <div className="flex items-center gap-2 mb-8 -ml-4">
+          <img 
+            src={TideTransformLogo} 
+            alt="Tide Transform" 
+            className="h-[80px]" 
+          />
         </div>
         
         <div className="flex-grow flex flex-col justify-center max-w-lg">
@@ -233,3 +237,4 @@ export default function SignUp() {
     </div>
   );
 }
+
