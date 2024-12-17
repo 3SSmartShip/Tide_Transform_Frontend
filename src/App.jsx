@@ -1,4 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { supabase } from "./config/supabaseClient";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import SignUp from "./components/Signup/Signup";
@@ -34,78 +36,20 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/dashboard/upload"
-          element={
-            <ProtectedRoute>
-              <Upload />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/api"
-          element={
-            <ProtectedRoute>
-              <Api />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/documents"
-          element={
-            <ProtectedRoute>
-                <AllDocuments />
 
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/billings"
-          element={
-            <ProtectedRoute>
-              <Billing />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/billings/plan"
-          element={
-            <ProtectedRoute>
-              <Billing />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Setting />
-            </ProtectedRoute>
-          }
-        />
+        {/* Rest of your existing routes */}
+        <Route path="/dashboard/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+        <Route path="/dashboard/api" element={<ProtectedRoute><Api /></ProtectedRoute>} />
+        <Route path="/dashboard/documents" element={<ProtectedRoute><AllDocuments /></ProtectedRoute>} />
+        <Route path="/billings" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+        <Route path="/billings/plan" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Setting /></ProtectedRoute>} />
 
         {/* 404 Route */}
-        <Route
-          path="*"
-          element={
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900">404</h1>
-                <p className="mt-2 text-lg text-gray-600">Page not found</p>
-                <a
-                  href="/"
-                  className="mt-4 inline-block text-indigo-600 hover:text-indigo-500"
-                >
-                  Go back home
-                </a>
-              </div>
-            </div>
-          }
-        />
+        <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
     </Router>
   );
 }
-export default App;
 
-// Add this route to your existing routes
+export default App;

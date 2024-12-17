@@ -1,106 +1,80 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link } from "react-router-dom";
+import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_navbar.png";
 
 export default function Footer() {
-  const footerSections = [
-    {
-      title: 'Product',
-      links: [
-        { name: 'Features', href: '/features' },
-        { name: 'Integrations', href: '/integrations' },
-        { name: 'Enterprise', href: '/enterprise' },
-        { name: 'Solutions', href: '/solutions' }
-      ]
-    },
-    {
-      title: 'Company',
-      links: [
-        { name: 'About Us', href: '/about' },
-        { name: 'Customers', href: '/customers' },
-        { name: 'Careers', href: '/careers' },
-        { name: 'Blog', href: '/blog' }
-      ]
-    },
-    {
-      title: 'Resources',
-      links: [
-        { name: 'Documentation', href: '/docs' },
-        { name: 'API Reference', href: '/api' },
-        { name: 'Status', href: '/status' },
-        { name: 'Support', href: '/support' }
-      ]
-    },
-    {
-      title: 'Legal',
-      links: [
-        { name: 'Privacy', href: '/privacy' },
-        { name: 'Terms', href: '/terms' },
-        { name: 'Security', href: '/security' },
-        { name: 'GDPR', href: '/gdpr' }
-      ]
-    }
-  ]
-
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {footerSections.map((section) => (
-            <div key={section.title}>
-              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
-                {section.title}
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-base text-gray-300 hover:text-white"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+    <>
+      <footer className="bg-black text-white relative pt-40 pb-24">
+        {/* Let's Start Something Great Section */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 -top-32">
+          <div className="bg-[#0066FF] rounded-2xl px-8 py-8 w-[850px] text-center">
+            <h2 className="text-2xl font-bold text-white mb-3">
+              Ready to try "Tide Transform"?
+            </h2>
+            <p className="text-white/80 mb-6">
+              Take the first step towards transforming your maritime
+              operations;together,we create solutions for a seamless future.
+            </p>
+            <div className="flex justify-center">
+              <Link
+                to="/signup"
+                className="bg-[#e8f902] text-black px-6 py-2 rounded-md hover:bg-[#e8f902] transition-colors text-base font-medium"
+              >
+                Sign Up Now
+              </Link>
             </div>
-          ))}
+          </div>
         </div>
 
-        <div className="mt-12 border-t border-gray-800 pt-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <img
-                className="h-8"
-                src="/logo-white.svg"
-                alt="Tide Transform"
-              />
-              <div className="flex space-x-6">
-                <a href="#" className="text-gray-400 hover:text-gray-300">
-                  <span className="sr-only">Twitter</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    {/* Twitter icon */}
-                  </svg>
+        <div className="max-w-7xl mx-auto px-4 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12">
+            <div>
+              <div>
+                <img 
+                  src={TideTransformLogo}
+                  alt="Tide Transform" 
+                  className="h-10 mb-2"
+                />
+                <p className="text-gray-400 text-sm">3S Smart Ship Solution</p>
+              </div>
+              <div className="flex gap-4 mt-4">
+                <a href="#" className="text-gray-400 hover:text-white">
+                  <i className="fab fa-facebook-f"></i>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-gray-300">
-                  <span className="sr-only">GitHub</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    {/* GitHub icon */}
-                  </svg>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  <i className="fab fa-twitter"></i>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-gray-300">
-                  <span className="sr-only">LinkedIn</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    {/* LinkedIn icon */}
-                  </svg>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  <i className="fab fa-linkedin-in"></i>
                 </a>
               </div>
             </div>
-            <p className="text-base text-gray-400">
-              &copy; 2024 Tide Transform. All rights reserved.
+            <div className="md:col-start-5">
+              <h3 className="text-white font-medium mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Privacy Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Add copyright text with reduced spacing */}
+          <div className="text-center mt-4 pt-4 border-t border-gray-800">
+            <p className="text-gray-400 text-sm">
+              © 2024 TideTransform. All Rights Reserved
             </p>
           </div>
         </div>
-      </div>
-    </footer>
-  )
-} 
+      </footer>
+    </>
+  );
+}

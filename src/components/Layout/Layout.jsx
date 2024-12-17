@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../../features/auth/authSlice'
+import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_navbar.png";
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -31,7 +32,7 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-black">
+    <div className="flex h-screen bg-[#0A0A0B]">
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -45,10 +46,11 @@ export default function Layout({ children }) {
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0 fixed lg:static inset-y-0 left-0 w-64 bg-black border-r border-gray-800 flex flex-col transition-transform duration-300 ease-in-out z-40`}>
         <div className="flex items-center gap-2 px-4 py-6">
-          <div className="bg-[#EEFF00] rounded-full p-2">
-            <span className="font-bold text-black">3s</span>
-          </div>
-          <span className="text-white font-semibold">Smart Ship</span>
+          <img
+            src={TideTransformLogo}
+            alt="Tide Transform"
+            className="h-8 w-auto"
+          />
         </div>
 
         <nav className="mt-6 flex-1">
