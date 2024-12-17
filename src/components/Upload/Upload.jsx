@@ -78,7 +78,7 @@ export default function Upload() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                3S AI Parsing
+                Invoice/RFQ 
               </button>
               <button
                 onClick={() => setSelectedMode('pattern')}
@@ -88,7 +88,7 @@ export default function Upload() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                Pattern Detection
+                Manuals
               </button>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function Upload() {
                     <UploadIcon className="h-8 w-8 text-black" />
                   </div>
                   <p className="text-gray-400">Drop files here or click to upload</p>
-                  <p className="text-sm text-gray-500 mt-2">Supported formats: PDF, DOC, DOCX, TXT</p>
+                  <p className="text-sm text-gray-500 mt-2">Supported formats: PDF</p>
                 </label>
               </div>
 
@@ -174,7 +174,7 @@ export default function Upload() {
               <Clock className="w-16 h-16 text-[#EEFF00] mx-auto mb-4" />
               <h2 className="text-3xl font-bold text-white mb-2">Coming Soon</h2>
               <p className="text-gray-400 text-lg">
-                Pattern Detection Parsing will be available shortly.
+                Manuals Parsing will be available shortly.
               </p>
             </motion.div>
           )}

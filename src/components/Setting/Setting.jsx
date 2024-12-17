@@ -51,7 +51,7 @@ export default function Setting() {
 
   return (
     <Layout>
-      <div className="min-h-screen">
+      <div className="px-8 min-h-screen">
         <h1 className="text-2xl font-semibold text-white mb-6">Account Settings</h1>
 
         <div className="bg-[#1C2632] rounded-lg p-6 space-y-6">
