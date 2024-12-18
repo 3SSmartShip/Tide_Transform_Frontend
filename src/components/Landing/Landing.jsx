@@ -10,7 +10,7 @@ import commault from "../../assets/logos/commault.png";
 import crompton from "../../assets/logos/crompton.png";
 import seclock from "../../assets/logos/seclock.png";
 import software from "../../assets/logos/software.png";
-import {  workflowImage, documentImage, fileSupport, apiImage } from '../../assets/images';
+import {  workflowImage, documentImage, fileSupport, apiImage } from '@/assets/images';
 
 export default function Landing() {
   const [pricingPeriod, setPricingPeriod] = useState("monthly");
