@@ -299,7 +299,7 @@ const PricingCard = ({
           <span className="text-2xl font-bold">{price}</span>
         ) : (
           <>
-            <span className="text-2xl font-bold">${period === 'monthly' ? price : '1199'}</span>
+            <span className="text-2xl font-bold">${period === 'monthly' ? price : '999'}</span>
             <span className="text-gray-500 ml-1">/{period}</span>
           </>
         )}
