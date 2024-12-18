@@ -1,25 +1,28 @@
 import React, { useCallback, useState, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { Upload, ChevronLeft, ChevronRight } from "lucide-react";
 import Footer from "../Footer/Footer";
 import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_navbar.png";
 import dashboard from "../../assets/dashboard.png";
-import cambrian from "../../assets/logos/cambrian.png";
-import commault from "../../assets/logos/commault.png";
-import crompton from "../../assets/logos/crompton.png";
-import seclock from "../../assets/logos/seclock.png";
-import software from "../../assets/logos/software.png";
-import { feature4Image, workflowImage, documentImage, fileSupport } from '../../assets/images';
+import sparsepazari from "../../assets/logos/sparsepazari.png";
+import tatanyk from "../../assets/logos/tatanyk.png";
+import {
+  feature4Image,
+  workflowImage,
+  documentImage,
+  fileSupport,
+} from "../../assets/images";
 
 export default function Landing() {
   const [pricingPeriod, setPricingPeriod] = useState("monthly");
+  const [selectedType, setSelectedType] = useState("invoice");
 
   const featuresRef = useRef(null);
   const pricingRef = useRef(null);
 
   const scrollToSection = (ref) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth' });
+    ref.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const onDrop = useCallback((acceptedFiles) => {
@@ -37,42 +40,42 @@ export default function Landing() {
     },
   });
 
+  const handleToggle = (type) => {
+    setSelectedType(type);
+  };
+
   return (
     <div className="w-full">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-2">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-[#0A0A0A] rounded-lg px-6 py-3 flex justify-between items-center">
+          <div className="bg-[#0A0A0A] rounded-lg px-4 py-2 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <img 
-                src={TideTransformLogo} 
-                alt="Tide Transform" 
-                className="h-[26px]" 
+              <img
+                src={TideTransformLogo}
+                alt="Tide Transform"
+                className="h-[38px]"
               />
             </div>
-            <nav className="hidden md:flex items-center gap-8">
-              <Link
+            <nav className="flex items-center justify-between space-x-12 pr-14">
+              <NavLink
                 to="/"
-                className="text-[15px] text-white hover:text-gray-300"
+                className={({ isActive }) =>
+                  isActive ? "text-blue-500" : "text-white"
+                }
               >
                 Home
-              </Link>
-              <button
-                onClick={() => scrollToSection(featuresRef)}
-                className="text-[15px] text-white hover:text-gray-300"
-              >
-                Feature
-              </button>
-              <button
-                onClick={() => scrollToSection(pricingRef)}
-                className="text-[15px] text-white hover:text-gray-300"
-              >
+              </NavLink>
+              <a href="#features" className="text-white">
+                Features
+              </a>
+              <a href="#pricing" className="text-white">
                 Pricing
-              </button>
+              </a>
             </nav>
             <Link
               to="/login"
-              className="bg-[#0066FF] text-white px-5 py-2 rounded-lg text-[15px]"
+              className="bg-[#0066FF] text-white px-4 py-1.5 rounded-lg text-[15px] h-[40px] flex items-center justify-center"
             >
               Sign In
             </Link>
@@ -90,12 +93,13 @@ export default function Landing() {
             <h1 className="text-[42px] leading-tight font-bold mb-4">
               Automate Complex Maritime
               <br />
-              <span className="text-[#0066FF]">Document</span> Workflows!
+              <span className="text-[#e8f902]">Document</span> Workflows!
             </h1>
             <p className="text-gray-600 mb-8">
-            Turn invoices, RFQs, and manuals into actionable data with 3S AI – marine-grade precision. No more copy +paste into spreadsheets!
+              Turn invoices, RFQs, and manuals into actionable data with 3S AI –
+              marine-grade precision. No more copy +paste into spreadsheets!
             </p>
-            <Link 
+            <Link
               to="/signup"
               className="bg-white text-gray-800 px-6 py-2.5 rounded-full text-sm shadow-md hover:bg-gray-50 transition-colors inline-block"
             >
@@ -121,17 +125,14 @@ export default function Landing() {
             We are just getting started
           </p>
           <div className="flex justify-center items-center gap-12 flex-wrap">
-            <img src={cambrian} alt="Cambrian" className="h-6" />
-            <img src={commault} alt="Commault" className="h-6" />
-            <img src={crompton} alt="Crompton" className="h-6" />
-            <img src={seclock} alt="Seclock" className="h-6" />
-            <img src={software} alt="Software" className="h-6" />
+            <img src={sparsepazari} alt="Cambrian" className="h-10" />
+            <img src={tatanyk} alt="Commault" className="h-10" />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section ref={featuresRef} className="py-16 bg-black">
+      <section ref={featuresRef} className="py-16 bg-black" id="features">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <button className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm mb-4">
@@ -178,8 +179,33 @@ export default function Landing() {
             Upload your first document
           </h2>
           <p className="text-gray-600 text-center mb-8">
-          Upload your document in the zone below, or drag and drop and after will you will a well structure json file.
+            Upload your document in the zone below, or drag and drop and after
+            will you will a well structure json file.
           </p>
+
+          {/* Toggle Button */}
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => handleToggle("invoice")}
+              className={`px-4 py-2 rounded-l-md border  ${
+                selectedType === "invoice"
+                  ? "bg-[#e8f902] text-black"
+                  : "bg-white text-black"
+              }`}
+            >
+              Invoice/RFQ
+            </button>
+            <button
+              onClick={() => handleToggle("manuals")}
+              className={`px-4 py-2 rounded-r-md border ${
+                selectedType === "manuals"
+                  ? "bg-[#e8f902] text-black"
+                  : "bg-white text-black"
+              }`}
+            >
+              Manuals
+            </button>
+          </div>
 
           <div
             {...getRootProps()}
@@ -196,14 +222,16 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section ref={pricingRef} className="py-20 bg-white mb-32">
+      <section ref={pricingRef} className="py-20 bg-white mb-32" id="pricing">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold mb-2">
               Flexible Pricing That Grows With You
             </h2>
             <p className="text-gray-600 text-sm max-w-3xl mx-auto">
-            Smart and scalable pricing powered by 3S AI—tailored to empower your business, whether You're Handling Standard Document Formats or Need Advanced AI Solutions for Complex Parsing.
+              Smart and scalable pricing powered by 3S AI—tailored to empower
+              your business, whether You're Handling Standard Document Formats
+              or Need Advanced AI Solutions for Complex Parsing.
             </p>
 
             {/* Toggle Button */}
@@ -238,8 +266,8 @@ export default function Landing() {
               period={pricingPeriod}
               features={[
                 "PDF, docx, slides, and images 5,000 pages per month",
-                "Structured data extraction",
-                "Up to 100 pages per document $0.01 per page afterwards",
+                "Structured data extraction.",
+                "Up to 100 pages per document - $0.01 per page afterwards",
               ]}
             />
             <PricingCard
@@ -267,8 +295,8 @@ const FeatureCard = ({ title, description, image, bgColor }) => (
     <p className="text-gray-400 text-sm mb-6">{description}</p>
     <div className="bg-[#111111] rounded-xl h-64 overflow-hidden">
       {image ? (
-        <img 
-          src={image} 
+        <img
+          src={image}
           alt={title}
           className="w-full h-full object-contain p-4"
         />
@@ -296,14 +324,20 @@ const PricingCard = ({
           <span className="text-2xl font-bold">{price}</span>
         ) : (
           <>
-            <span className="text-2xl font-bold">${period === 'monthly' ? price : '999'}</span>
+            <span className="text-2xl font-bold">
+              ${period === "monthly" ? price : "999"}
+            </span>
             <span className="text-gray-500 ml-1">/{period}</span>
           </>
         )}
       </div>
     </div>
     <button
-      className="w-full py-2 rounded-lg mb-8 bg-[#0066FF] text-white"
+      className={`w-full py-2 rounded-lg mb-8 ${
+        isEnterprise
+          ? "bg-blue-600 text-white"
+          : "bg-white text-black border border-black   hover:bg-blue-600 hover:text-white"
+      }`}
     >
       {isEnterprise ? "Contact Team" : "Select Plan"}
     </button>
