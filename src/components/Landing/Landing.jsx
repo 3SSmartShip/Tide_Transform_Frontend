@@ -17,6 +17,7 @@ import {
 export default function Landing() {
   const [pricingPeriod, setPricingPeriod] = useState("monthly");
   const [selectedType, setSelectedType] = useState("invoice");
+  const [activeSection, setActiveSection] = useState("Home");
 
   const featuresRef = useRef(null);
   const pricingRef = useRef(null);
@@ -54,51 +55,71 @@ export default function Landing() {
               <img
                 src={TideTransformLogo}
                 alt="Tide Transform"
-                className="h-[38px]"
+                className="h-[30px]"
               />
             </div>
-            <nav className="flex items-center justify-between space-x-12 pr-14">
-              <NavLink
-                to="/"
-                className={({ isActive }) =>
-                  isActive ? "text-blue-500" : "text-white"
+
+            <nav className="flex items-center justify-between space-x-12 pr-20">
+              <button
+                onClick={() => (window.location.href = "/")}
+                className={
+                  activeSection === "Home" ? "text-blue-500" : "text-white"
                 }
               >
                 Home
-              </NavLink>
-              <a href="#features" className="text-white">
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection("Features");
+                  scrollToSection(featuresRef);
+                }}
+                className={
+                  activeSection === "Features" ? "text-blue-500" : "text-white"
+                }
+              >
                 Features
-              </a>
-              <a href="#pricing" className="text-white">
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection("Pricing");
+                  scrollToSection(pricingRef);
+                }}
+                className={
+                  activeSection === "Pricing" ? "text-blue-500" : "text-white"
+                }
+              >
                 Pricing
-              </a>
+              </button>
             </nav>
+
             <Link
-              to="/login"
-              className="bg-[#0066FF] text-white px-4 py-1.5 rounded-lg text-[15px] h-[40px] flex items-center justify-center"
+              to="/signup"
+              className="bg-[#0066FF] text-white px-2 py-1 rounded-md text-sm h-8 flex items-center justify-center"
             >
-              Sign In
+              Sign Up
             </Link>
           </div>
         </div>
       </header>
 
       {/* Hero Section - Updated with exact gradient match */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-32 pb-02 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0066FF]/5 via-[#0066FF]/40 to-[#0066FF]/5" />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent" />
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <p className="text-sm text-gray-600 mb-2">Document AI Platform</p>
+                <p className="text-sm text-gray-600 mb-2 border border-white rounded-full px-4 py-2 shadow-md inline-block">
+                  Document AI Platform
+                </p>
             <h1 className="text-[42px] leading-tight font-bold mb-4">
               Automate Complex Maritime
               <br />
               <span className="text-[#e8f902]">Document</span> Workflows!
             </h1>
-            <p className="text-gray-600 mb-8">
-              Turn invoices, RFQs, and manuals into actionable data with 3S AI –
-              marine-grade precision. No more copy +paste into spreadsheets!
-            </p>
+                <p className="text-gray-600 mb-8 mx-auto max-w-2xl text-center">
+                  Turn invoices, RFQs, and manuals into actionable data with 3S AI –
+                  marine-grade precision. No more copy + paste into spreadsheets!
+                </p>
             <Link
               to="/signup"
               className="bg-white text-gray-800 px-6 py-2.5 rounded-full text-sm shadow-md hover:bg-gray-50 transition-colors inline-block"
@@ -119,12 +140,12 @@ export default function Landing() {
       </section>
 
       {/* Partner Logos Section */}
-      <section className="py-8 bg-white">
+      <section className="py-14 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <p className="text-center text-gray-500 mb-8">
             We are just getting started
           </p>
-          <div className="flex justify-center items-center gap-12 flex-wrap">
+          <div className="flex justify-center items-center gap-16 flex-wrap">
             <img src={sparsepazari} alt="Cambrian" className="h-10" />
             <img src={tatanyk} alt="Commault" className="h-10" />
           </div>
@@ -184,23 +205,23 @@ export default function Landing() {
           </p>
 
           {/* Toggle Button */}
-          <div className="flex justify-center mb-4">
+          <div className="flex items-center justify-center gap-4 mt-8 mb-12">
             <button
               onClick={() => handleToggle("invoice")}
-              className={`px-4 py-2 rounded-l-md border  ${
+              className={`px-4 py-1 rounded-full text-sm transition-colors ${
                 selectedType === "invoice"
-                  ? "bg-[#e8f902] text-black"
-                  : "bg-white text-black"
+                  ? "bg-[#0066FF] text-white"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Invoice/RFQ
             </button>
             <button
               onClick={() => handleToggle("manuals")}
-              className={`px-4 py-2 rounded-r-md border ${
+              className={`px-4 py-1 rounded-full text-sm transition-colors ${
                 selectedType === "manuals"
-                  ? "bg-[#e8f902] text-black"
-                  : "bg-white text-black"
+                  ? "bg-[#0066FF] text-white"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Manuals
@@ -221,6 +242,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Partition Divider */}
+      <div className="w-full h-1 bg-gradient-to-r from-gray-300 via-gray-500 to-gray-300 rounded" />
+
       {/* Pricing Section */}
       <section ref={pricingRef} className="py-20 bg-white mb-32" id="pricing">
         <div className="max-w-7xl mx-auto px-4">
@@ -237,9 +261,9 @@ export default function Landing() {
             {/* Toggle Button */}
             <div className="flex items-center justify-center gap-4 mt-8 mb-12">
               <button
-                onClick={() => setPricingPeriod("monthly")}
+                onClick={() => setPricingPeriod("Monthly")}
                 className={`px-4 py-1 rounded-full text-sm transition-colors ${
-                  pricingPeriod === "monthly"
+                  pricingPeriod === "Monthly"
                     ? "bg-[#0066FF] text-white"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
@@ -247,9 +271,9 @@ export default function Landing() {
                 Monthly
               </button>
               <button
-                onClick={() => setPricingPeriod("annually")}
+                onClick={() => setPricingPeriod("Annually")}
                 className={`px-4 py-1 rounded-full text-sm transition-colors ${
-                  pricingPeriod === "annually"
+                  pricingPeriod === "Annually"
                     ? "bg-[#0066FF] text-white"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
@@ -342,7 +366,7 @@ const PricingCard = ({
       {isEnterprise ? "Contact Team" : "Select Plan"}
     </button>
     <div>
-      <p className="font-medium mb-4">Features</p>
+      <p className="font-medium mb-4">Features:</p>
       <ul className="space-y-3">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start gap-2 text-sm">

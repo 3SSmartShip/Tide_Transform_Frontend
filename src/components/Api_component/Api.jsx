@@ -97,7 +97,7 @@ export default function ApiDashboard() {
 
   return (
     <Layout>
-      <div className="px-8">
+          <div className="px-32px py-32px">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-white">API Keys</h1>
           <motion.button
