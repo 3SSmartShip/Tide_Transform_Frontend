@@ -15,7 +15,7 @@ import {
 } from "../../assets/images";
 
 export default function Landing() {
-  const [pricingPeriod, setPricingPeriod] = useState("monthly");
+  const [pricingPeriod, setPricingPeriod] = useState("Monthly");
   const [selectedType, setSelectedType] = useState("invoice");
   const [activeSection, setActiveSection] = useState("Home");
 
@@ -108,18 +108,18 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent" />
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-                <p className="text-sm text-gray-600 mb-2 border border-white rounded-full px-4 py-2 shadow-md inline-block">
-                  Document AI Platform
-                </p>
+            <p className="text-sm text-gray-600 mb-2 border border-white rounded-full px-4 py-2 shadow-md inline-block">
+              Document AI Platform
+            </p>
             <h1 className="text-[42px] leading-tight font-bold mb-4">
               Automate Complex Maritime
               <br />
               <span className="text-[#e8f902]">Document</span> Workflows!
             </h1>
-                <p className="text-gray-600 mb-8 mx-auto max-w-2xl text-center">
-                  Turn invoices, RFQs, and manuals into actionable data with 3S AI –
-                  marine-grade precision. No more copy + paste into spreadsheets!
-                </p>
+            <p className="text-gray-600 mb-8 mx-auto max-w-2xl text-center">
+              Turn invoices, RFQs, and manuals into actionable data with 3S AI –
+              marine-grade precision. No more copy + paste into spreadsheets!
+            </p>
             <Link
               to="/signup"
               className="bg-white text-gray-800 px-6 py-2.5 rounded-full text-sm shadow-md hover:bg-gray-50 transition-colors inline-block"
@@ -247,62 +247,63 @@ export default function Landing() {
 
       {/* Pricing Section */}
       <section ref={pricingRef} className="py-20 bg-white mb-32" id="pricing">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold mb-2">
-              Flexible Pricing That Grows With You
-            </h2>
-            <p className="text-gray-600 text-sm max-w-3xl mx-auto">
-              Smart and scalable pricing powered by 3S AI—tailored to empower
-              your business, whether You're Handling Standard Document Formats
-              or Need Advanced AI Solutions for Complex Parsing.
-            </p>
-
-            {/* Toggle Button */}
-            <div className="flex items-center justify-center gap-4 mt-8 mb-12">
-              <button
-                onClick={() => setPricingPeriod("Monthly")}
-                className={`px-4 py-1 rounded-full text-sm transition-colors ${
-                  pricingPeriod === "Monthly"
-                    ? "bg-[#0066FF] text-white"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setPricingPeriod("Annually")}
-                className={`px-4 py-1 rounded-full text-sm transition-colors ${
-                  pricingPeriod === "Annually"
-                    ? "bg-[#0066FF] text-white"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Annually
-              </button>
+        <div>
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl font-bold mb-2">
+                Flexible Pricing That Grows With You
+              </h2>
+              <p className="text-gray-600 text-sm max-w-3xl mx-auto">
+                Smart and scalable pricing powered by 3S AI—tailored to empower
+                your business, whether You're Handling Standard Document Formats
+                or Need Advanced AI Solutions for Complex Parsing.
+              </p>
+              {/* Toggle Button */}
+              <div className="flex items-center justify-center gap-4 mt-8 mb-12">
+                <button
+                  onClick={() => setPricingPeriod("Monthly")}
+                  className={`px-4 py-1 rounded-full text-sm transition-colors ${
+                    pricingPeriod === "Monthly"
+                      ? "bg-[#0066FF] text-white"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setPricingPeriod("Annually")}
+                  className={`px-4 py-1 rounded-full text-sm transition-colors ${
+                    pricingPeriod === "Annually"
+                      ? "bg-[#0066FF] text-white"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Annually
+                </button>
+              </div>
+              {/* Pricing Cards */}
+              <div className="flex justify-center gap-8">
+                <PricingCard
+                  title="API Only"
+                  price=""
+                  period={pricingPeriod}
+                  features={[
+                    "PDF, docx, slides, and images 5,000 pages per month",
+                    "Structured data extraction.",
+                    "Up to 100 pages per document - $0.01 per page afterwards",
+                  ]}
+                />
+                <PricingCard
+                  title="Enterprise"
+                  price="Contact Sales"
+                  features={[
+                    "Everything in Platform + Connect to custom models",
+                    "Fine Tuning",
+                  ]}
+                  isEnterprise={true}
+                />
+              </div>
             </div>
-          </div>
-
-          <div className="flex justify-center gap-8">
-            <PricingCard
-              title="API Only"
-              price="99"
-              period={pricingPeriod}
-              features={[
-                "PDF, docx, slides, and images 5,000 pages per month",
-                "Structured data extraction.",
-                "Up to 100 pages per document - $0.01 per page afterwards",
-              ]}
-            />
-            <PricingCard
-              title="Enterprise"
-              price="Contact Sales"
-              features={[
-                "Everything in Platform + Connect to custom models",
-                "Fine Tuning",
-              ]}
-              isEnterprise={true}
-            />
           </div>
         </div>
       </section>
@@ -348,10 +349,10 @@ const PricingCard = ({
           <span className="text-2xl font-bold">{price}</span>
         ) : (
           <>
-            <span className="text-2xl font-bold">
-              ${period === "monthly" ? price : "999"}
-            </span>
-            <span className="text-gray-500 ml-1">/{period}</span>
+                <span className="text-2xl font-bold">
+                  ${period === "Monthly" ? '99' : "999"}
+                </span>
+                <span className="text-gray-500 ml-1">/{period}</span>
           </>
         )}
       </div>
