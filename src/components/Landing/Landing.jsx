@@ -10,7 +10,7 @@ import commault from "../../assets/logos/commault.png";
 import crompton from "../../assets/logos/crompton.png";
 import seclock from "../../assets/logos/seclock.png";
 import software from "../../assets/logos/software.png";
-import {  workflowImage, documentImage, fileSupport, apiImage } from '@/assets/images';
+import { feature4Image, workflowImage, documentImage, fileSupport } from '../../assets/images';
 
 export default function Landing() {
   const [pricingPeriod, setPricingPeriod] = useState("monthly");
@@ -146,7 +146,7 @@ export default function Landing() {
             <FeatureCard
               title="Workflow Automation"
               description="Optimised for Daily Workflows and Scalable Automation, Complete with a Dashboard for Instant Insights"
-              image={apiImage}
+              image={feature4Image}
               bgColor="bg-[#1A1A1A]"
             />
             <FeatureCard

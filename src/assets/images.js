@@ -1,12 +1,12 @@
-// Import images using the alias
-import apiImage from "@/assets/features/feature4.png";
-import workflowImage from "@/assets/features/feature2.png";
-import documentImage from "@/assets/features/feature3.png";
-import fileSupport from "@/assets/features/feature1.png";
+// Define image paths using public URL
+const feature4Image = '/images/feature4.png';
+const workflowImage = '/images/feature2.png';
+const documentImage = '/images/feature3.png';
+const fileSupport = '/images/feature1.png';
 
-// Export images
+// Export image paths
 export {
-  apiImage,
+  feature4Image,
   workflowImage,
   documentImage,
   fileSupport,
