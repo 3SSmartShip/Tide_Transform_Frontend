@@ -10,10 +10,7 @@ import commault from "../../assets/logos/commault.png";
 import crompton from "../../assets/logos/crompton.png";
 import seclock from "../../assets/logos/seclock.png";
 import software from "../../assets/logos/software.png";
-import workflowImage from "../../assets/features/feature4.png";
-import documentImage from "../../assets/features/feature2.png";
-import fileSupport from "../../assets/features/feature3.png";
-import apiImage from "../../assets/features/feature1.png";
+import {  workflowImage, documentImage, fileSupport, apiImage } from '../../assets/images';
 
 export default function Landing() {
   const [pricingPeriod, setPricingPeriod] = useState("monthly");
@@ -149,7 +146,7 @@ export default function Landing() {
             <FeatureCard
               title="Workflow Automation"
               description="Optimised for Daily Workflows and Scalable Automation, Complete with a Dashboard for Instant Insights"
-              image={workflowImage}
+              image={apiImage}
               bgColor="bg-[#1A1A1A]"
             />
             <FeatureCard
@@ -167,7 +164,7 @@ export default function Landing() {
             <FeatureCard
               title="API-Driven Parsing"
               description="Effortlessly Access Scalable Infrastructure with the Simplicity of an API Integration"
-              image={apiImage}
+              image={workflowImage}
               bgColor="bg-[#1A1A1A]"
             />
           </div>
