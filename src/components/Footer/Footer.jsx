@@ -5,10 +5,10 @@ import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_navbar.png
 export default function Footer() {
   return (
     <>
-      <footer className="bg-black text-white relative pt-40 pb-24">
+      <footer className="bg-black text-white relative pt-40 pb-8 ">
         {/* Let's Start Something Great Section */}
         <div className="absolute left-1/2 transform -translate-x-1/2 -top-32">
-          <div className="bg-[#0066FF] rounded-2xl px-8 py-8 w-[850px] text-center">
+          <div className="bg-[#0066FF] rounded-2xl px-8 py-8 w-[700px] text-center">
             <h2 className="text-2xl font-bold text-white mb-3">
               Ready to try "Tide Transform"?
             </h2>
@@ -21,7 +21,7 @@ export default function Footer() {
                 to="/signup"
                 className="bg-[#e8f902] text-black px-6 py-2 rounded-md hover:bg-[#e8f902] transition-colors text-base font-medium"
               >
-                Sign Up Now
+                Sign Up 
               </Link>
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function Footer() {
           {/* Add copyright text with reduced spacing */}
           <div className="text-center mt-4 pt-4 border-t border-gray-800">
             <p className="text-gray-400 text-sm">
-              © 2024 TideTransform. All Rights Reserved
+              © 2025 3S Smart Ship Solution Pte Ltd.
             </p>
           </div>
         </div>
