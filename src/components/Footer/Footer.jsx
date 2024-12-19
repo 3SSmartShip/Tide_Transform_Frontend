@@ -5,27 +5,26 @@ import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_navbar.png
 export default function Footer() {
   return (
     <>
-      <footer className="bg-black text-white relative pt-40 pb-8 ">
-        {/* Let's Start Something Great Section */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 -top-32">
-          <div className="bg-[#0066FF] rounded-2xl px-8 py-8 w-[700px] text-center">
-            <h2 className="text-2xl font-bold text-white mb-3">
-              Ready to try "Tide Transform"?
-            </h2>
-            <p className="text-white/80 mb-6">
-              Take the first step towards transforming your maritime
-              operations;together,we create solutions for a seamless future.
-            </p>
-            <div className="flex justify-center">
-              <Link
-                to="/signup"
-                className="bg-[#e8f902] text-black px-6 py-2 rounded-md hover:bg-[#e8f902] transition-colors text-base font-medium"
-              >
-                Sign Up 
-              </Link>
+      <footer className="bg-black text-white relative pt-40 pb-8 ">   
+            <div className="absolute left-1/2 transform -translate-x-1/2 -top-32 w-full px-4 sm:px-6 md:w-[700px]">
+              <div className="bg-[#0066FF] rounded-2xl px-6 py-6 sm:px-8 sm:py-8 text-center">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                  Ready to try "Tide Transform"?
+                </h2>
+                <p className="text-white/80 mb-6 text-sm sm:text-base">
+                  Take the first step towards transforming your maritime
+                  operations; together, we create solutions for a seamless future.
+                </p>
+                <div className="flex justify-center">
+                  <Link
+                    to="/signup"
+                    className="bg-[#e8f902] text-black px-4 sm:px-6 py-2 rounded-md hover:bg-[#d7eb00] transition-colors text-sm sm:text-base font-medium"
+                  >
+                    Sign Up 
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         <div className="max-w-7xl mx-auto px-4 mt-16">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-12">
