@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabaseClient";
 
 export default function OTPVerification() {
+  const navigate = useNavigate();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   // Handle input change for each OTP digit
   const handleChange = (element, index) => {
@@ -31,11 +31,11 @@ export default function OTPVerification() {
     try {
       const email = localStorage.getItem('userEmail');
       const otpString = otp.join('');
-      
+
       const { data, error: verificationError } = await supabase.auth.verifyOtp({
         email,
         token: otpString,
-        type: 'email'
+        type: 'signup'
       });
 
       if (verificationError) {
@@ -45,31 +45,12 @@ export default function OTPVerification() {
 
       if (data?.user) {
         localStorage.removeItem('userEmail');
-        navigate("/dashboard");
+        navigate("/onboarding"); // Redirect to onboarding page
       }
     } catch (error) {
       setError('Verification failed. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    try {
-      const email = localStorage.getItem('userEmail');
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        }
-      });
-
-      if (!error) {
-        alert('Verification email resent successfully');
-      }
-    } catch (error) {
-      setError('Failed to resend verification email');
     }
   };
 
@@ -90,7 +71,7 @@ export default function OTPVerification() {
             Verify Your Account
           </h1>
           <p className="text-gray-600">
-            We've sent a verification code to your email. please enter it below to complete your registration
+            We've sent a verification code to your email. Please enter it below to complete your registration.
           </p>
         </div>
 
@@ -100,7 +81,7 @@ export default function OTPVerification() {
             Enter Verification Code
           </h2>
           <p className="text-gray-600 mb-8">
-            No worries, we'll send you reset instructions.
+            Please enter the code sent to your email.
           </p>
 
           <form onSubmit={handleVerifyOTP}>
@@ -131,17 +112,6 @@ export default function OTPVerification() {
                 {error}
               </div>
             )}
-
-            <div className="mt-4 text-center">
-              <span className="text-gray-600">Didn't receive the code? </span>
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                className="text-[#0066FF] font-normal"
-              >
-                Click to resend
-              </button>
-            </div>
           </form>
         </div>
       </div>

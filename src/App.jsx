@@ -1,5 +1,9 @@
-import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { supabase } from "./config/supabaseClient";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -14,8 +18,11 @@ import Billing from "./components/Billing/Billing";
 import Setting from "./components/Setting/Setting";
 import OTPVerification from "./components/OTPVerification/OTPVerification";
 import AllDocuments from "./components/AllDocuments/AllDocuments";
+import Onboarding from "./components/Onboarding/Onboarding";
+import Layout from "./components/Layout/Layout";
 
 function App() {
+  const isOnboarded = localStorage.getItem("isOnboarded");
   return (
     <Router>
       <Routes>
@@ -27,6 +34,17 @@ function App() {
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/verify-otp" element={<OTPVerification />} />
 
+        <Route
+          path="/onboarding"
+          element={
+            isOnboarded ? (
+              <Navigate to="/dashboard/upload" replace />
+            ) : (
+              <Onboarding />
+            )
+          }
+        />
+
         {/* Protected Routes */}
         <Route
           path="/dashboard"
@@ -36,14 +54,54 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Rest of your existing routes */}
-        <Route path="/dashboard/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
-        <Route path="/dashboard/api" element={<ProtectedRoute><Api /></ProtectedRoute>} />
-        <Route path="/dashboard/documents" element={<ProtectedRoute><AllDocuments /></ProtectedRoute>} />
-        <Route path="/billings" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-        <Route path="/billings/plan" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Setting /></ProtectedRoute>} />
+        <Route
+          path="/dashboard/upload"
+          element={
+            <ProtectedRoute>
+              <Upload />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/api"
+          element={
+            <ProtectedRoute>
+              <Api />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/documents"
+          element={
+            <ProtectedRoute>
+              <AllDocuments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billings"
+          element={
+            <ProtectedRoute>
+              <Billing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billings/plan"
+          element={
+            <ProtectedRoute>
+              <Billing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Setting />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 Route */}
         <Route path="*" element={<div>404 Not Found</div>} />

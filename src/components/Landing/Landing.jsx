@@ -78,8 +78,8 @@ export default function Landing() {
                 onClick={() => handleNavigation("Home")}
                 className={`px-4 py-2 rounded-md ${
                   activeSection === "Home"
-                    ? "bg-blue-500 text-white"
-                    : "text-white hover:bg-gray-700 "
+                    ? " text-blue-500"
+                    : "text-white "
                 }`}
               >
                 Home
@@ -88,18 +88,18 @@ export default function Landing() {
                 onClick={() => handleNavigation("Features")}
                 className={`px-4 py-2 rounded-md ${
                   activeSection === "Features"
-                    ? "bg-blue-500 text-white"
-                    : "text-white hover:bg-gray-700 "
+                    ? " text-blue-500"
+                    : "text-white  "
                 }`}
               >
                 Features
               </button>
               <button
                 onClick={() => handleNavigation("Pricing")}
-                className={`px-4 py-2 rounded-md ${
+                className={`px-4 py-2 pr-60 rounded-md ${
                   activeSection === "Pricing"
-                    ? "bg-blue-500 text-white"
-                    : "text-white hover:bg-gray-700 pr-60"
+                    ? " text-blue-500"
+                    : "text-white  pr-60"
                 }`}
               >
                 Pricing

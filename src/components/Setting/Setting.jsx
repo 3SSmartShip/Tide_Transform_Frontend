@@ -1,132 +1,270 @@
-import { useState, useEffect } from 'react';
-import Layout from '../Layout/Layout';
-import { supabase } from '../../config/supabaseClient';
-import { PencilIcon } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Layout from "../Layout/Layout";
+import { supabase } from "../../config/supabaseClient";
+import { PencilIcon, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Setting() {
-  const [isEditingPassword, setIsEditingPassword] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
   const [userData, setUserData] = useState({
-    name: '',
-    email: ''
+    id: "",
+    name: "",
+    email: "",
   });
+  const [message, setMessage] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordVisible, setNewPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        console.error("Error fetching authenticated user:", authError);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, name, email")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+      } else {
         setUserData({
-          name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
-          email: user.email
+          id: data.id,
+          name: data.name,
+          email: data.email,
         });
+        setNewName(data.name);
       }
     };
 
     fetchUserData();
   }, []);
 
+  const handleNameChange = async () => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ name: newName })
+        .eq("id", userData.id);
+
+      if (error) throw error;
+
+      setUserData((prev) => ({ ...prev, name: newName }));
+      setIsEditingName(false);
+      setMessage("Name updated successfully");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   const handlePasswordChange = async () => {
     try {
       if (newPassword !== confirmPassword) {
-        setMessage('Passwords do not match');
+        setMessage("Passwords do not match");
         return;
       }
-
       const { data, error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       });
-        if (error) throw error;
+      if (error) throw error;
 
-        setMessage('Password updated successfully');
-        setIsEditingPassword(false);
-        setNewPassword('');
-        setConfirmPassword('');
-      } catch (error) {
-        setMessage(error.message);
-      }
-    };
+      // Show success animation
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000); // Hide animation after 3 seconds
+
+      setMessage("Password updated successfully");
+      setIsEditingPassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      setNewPasswordVisible(false);
+      setConfirmPasswordVisible(false);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
 
   return (
     <Layout>
-          <div className="w-full px-16px py-16px">
-            <h1 className="text-xl font-semibold text-white mb-4">Account Settings</h1>
+      <div className="px-32px py-32px relative">
+        <h1 className="text-2xl font-semibold text-white mb-6">
+          Account Setting
+        </h1>
 
-            <div className="bg-[#1C2632] rounded-lg p-4 space-y-4">
-              {/* Name Field */}
-              <div className="space-y-0.5">
-                <label className="block text-gray-400 text-s">Full Name</label>
-                <div className="text-white text-base">{userData.name}</div>
-              </div>
+        {showSuccessMessage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-lg z-50"
+          >
+            Password updated!
+          </motion.div>
+        )}
 
-              {/* Email Field */}
-              <div className="space-y-0.5">
-                <label className="block text-gray-400 text-s">Email Address</label>
-                <div className="text-white text-base">{userData.email}</div>
-              </div>
-
-              {/* Password Field */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                <div className="space-y-0.5 flex-grow">
-                  <label className="block text-gray-400 text-s">Password</label>
-                  {isEditingPassword ? (
-                    <div className="space-y-3 flex flex-col items-center pl-4">
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        className="w-2/4 bg-gray-800 text-white px-2 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      />
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                        className="w-2/4 bg-gray-800 text-white px-2 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handlePasswordChange}
-                          className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
-                        >
-                          Save Password
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsEditingPassword(false);
-                            setNewPassword('');
-                            setConfirmPassword('');
-                          }}
-                          className="bg-gray-700 text-white px-3 py-1.5 rounded-md hover:bg-gray-600 text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-white text-sm">••••••••</div>
-                  )}
-                  {message && (
-                    <p className={`text-xs ${message.includes('match') || message.includes('error') ? 'text-red-400' : 'text-green-400'}`}>
-                      {message}
-                    </p>
-                  )}
+        <div className="bg-[#1E1E1E] rounded-lg p-6 border border-gray-800">
+          {/* Name Field */}
+          <div className="flex justify-between items-center border-b border-gray-800 pb-4">
+            <div className="flex items-center">
+              <label className="text-gray-400 w-24">Name</label>
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="text-white bg-transparent border border-gray-800 rounded-lg px-2 py-1"
+                />
+              ) : (
+                <div className="text-white">
+                  {userData.name || "Loading..."}
                 </div>
-                {!isEditingPassword && (
-                  <button
-                    onClick={() => setIsEditingPassword(true)}
-                    className="mt-2 sm:mt-0 p-1.5 text-blue-500 hover:text-blue-400 rounded-md flex items-center gap-1 text-sm"
-                  >
-                    <PencilIcon className="h-3 w-3" />
-                    Edit
-                  </button>
-                )}
+              )}
+            </div>
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleNameChange}
+                  className="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setIsEditingName(false)}
+                  className="bg-gray-600 text-white px-2 py-1 rounded-md hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsEditingName(true)}
+                className="flex items-center gap-1 text-blue-500"
+              >
+                <PencilIcon className="w-4 h-4" />
+                <span>Edit</span>
+              </button>
+            )}
+          </div>
+
+          {/* Email Field */}
+          <div className="flex items-center py-4 border-b border-gray-800">
+            <label className="text-gray-400 w-24">Email</label>
+            <div className="text-white">{userData.email || "Loading..."}</div>
+          </div>
+
+          {/* Password Field */}
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <label className="text-gray-400 w-24">Password</label>
+              <div className="text-white">
+                {!isEditingPassword && "•••••••"}
               </div>
             </div>
+            {!isEditingPassword && (
+              <button
+                onClick={() => setIsEditingPassword(true)}
+                className="flex items-center gap-1 text-blue-500"
+              >
+                <PencilIcon className="w-4 h-4" />
+                <span>Edit</span>
+              </button>
+            )}
           </div>
+
+          {isEditingPassword && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-4 mt-4"
+            >
+              {/* New Password Input */}
+              <div className="space-y-2 w-full">
+                <div className="text-center">
+                  <label className="block text-sm text-gray-400 pr-64">
+                    New Password
+                  </label>
+                </div>
+                <div className="relative w-[379px] mx-auto">
+                  <input
+                    type={newPasswordVisible ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-2 text-white pr-10"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setNewPasswordVisible(!newPasswordVisible)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                  >
+                    {newPasswordVisible ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password Input */}
+              <div className="space-y-2 w-full">
+                <div className="text-center">
+                  <label className="block text-sm pr-60 text-gray-400">
+                    Confirm Password
+                  </label>
+                </div>
+                <div className="relative w-[379px] mx-auto">
+                  <input
+                    type={confirmPasswordVisible ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-transparent border border-gray-800 rounded-lg px-4 py-2 text-white pr-10"
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConfirmPasswordVisible(!confirmPasswordVisible)
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                  >
+                    {confirmPasswordVisible ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  onClick={handlePasswordChange}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                  Update Password
+                </button>
+                <button
+                  onClick={() => setIsEditingPassword(false)}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
     </Layout>
   );
 }

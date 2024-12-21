@@ -9,14 +9,15 @@ export default function CreateApiModal({ isOpen, onClose, onApiKeyCreated }) {
 
   const handleGenerate = async () => {
     if (!apiName) return;
-
+  
     setIsLoading(true);
     setError('');
-
+  
     try {
       const newApiKey = await apiKeysService.createApiKey(apiName);
+      console.log("New API Key Created:", newApiKey.key); // Print the actual API key
       if (typeof onApiKeyCreated === 'function') {
-        onApiKeyCreated(newApiKey);
+        onApiKeyCreated(newApiKey); // Pass the new API key to the parent component
       }
       setApiName('');
       onClose();
@@ -44,7 +45,9 @@ export default function CreateApiModal({ isOpen, onClose, onApiKeyCreated }) {
             className="w-full max-w-lg bg-[#2A2F3C] rounded-lg p-8 mx-4 relative"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-semibold text-white mb-2">Create API Key</h2>
+
+                    <h2 className="text-2xl font-semibold text-white mb-2 text-center">Create API Key</h2>
+                    <p className="text-gray-400 text-center">Generate your Api key to seamlessly integrate intelligent document parsing into your maritime operations.</p>
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"
