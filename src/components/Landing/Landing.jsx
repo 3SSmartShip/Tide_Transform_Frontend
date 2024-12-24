@@ -49,9 +49,9 @@ export default function Landing() {
 
   const onDrop = useCallback(
     (acceptedFiles) => {
-      if (selectedType === "manuals" && hasManualParsed) {
+      if ((selectedType === "manuals" && hasManualParsed) || (selectedType === "invoice" && hasInvoiceParsed)) {
         setError(
-          "You have already parsed a manual. Please refresh the page to start over."
+          `You have already parsed a ${selectedType}. Please refresh the page to start over.`
         );
         return;
       }
@@ -66,7 +66,7 @@ export default function Landing() {
         setError(null);
       }
     },
-    [selectedType, hasManualParsed]
+    [selectedType, hasManualParsed, hasInvoiceParsed]
   );
 
   const handleToggle = (type) => {
@@ -76,6 +76,8 @@ export default function Landing() {
     setParsedData(null);
     setError(null);
     setSuccessMessage("");
+    setHasInvoiceParsed(false);
+    setHasManualParsed(false);
   };
 
   const handleNavigation = (section) => {
@@ -395,12 +397,12 @@ export default function Landing() {
               Document Processing Demo
             </h2>
 
-            {selectedType === "manuals" && hasManualParsed ? (
+            {(selectedType === "manuals" && hasManualParsed) || (selectedType === "invoice" && hasInvoiceParsed) ? (
               <div className="border-2 border-yellow-400 bg-yellow-50 rounded-lg p-4 mb-4">
                 <div className="flex items-center">
                   <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
                   <p className="text-yellow-700">
-                    You have already parsed a manual. Please refresh the
+                    You have already parsed a {selectedType}. Please refresh the
                     page to start over.
                   </p>
                 </div>
