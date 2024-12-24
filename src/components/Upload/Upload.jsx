@@ -14,59 +14,172 @@ import {
 } from "@react-pdf/renderer";
 import { jsonToPlainText } from "json-to-plain-text";
 
-// Define PDF styles
+// Enhanced styles with better structure
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
-    padding: 20,
+    padding: 30,
     fontSize: 10,
     fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 25,
+    textAlign: "center",
+    color: "#2563EB",
+    padding: 10,
+    borderBottom: 1,
+    borderColor: "#2563EB",
   },
   sectionHeader: {
     fontSize: 14,
     fontWeight: "bold",
-    marginTop: 10,
-    marginBottom: 5,
-    textDecoration: "underline",
+    marginTop: 20,
+    marginBottom: 10,
+    backgroundColor: "#f3f4f6",
+    padding: 8,
+    color: "#1f2937",
   },
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    marginBottom: 4,
+    minHeight: 25,
+    alignItems: "flex-start",
   },
   key: {
-    flex: 1,
+    width: "30%",
     textAlign: "left",
     fontWeight: "bold",
-    marginRight: 5,
+    paddingRight: 10,
+    color: "#4b5563",
+    paddingTop: 2,
   },
   value: {
-    flex: 2,
+    width: "70%",
     textAlign: "left",
+    flexWrap: "wrap",
   },
   subsection: {
-    marginBottom: 10,
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 4,
+  },
+  nestedContainer: {
+    marginLeft: 20,
+    marginTop: 4,
+  },
+  nestedRow: {
+    flexDirection: "row",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    marginBottom: 2,
+    alignItems: "flex-start",
+  },
+  nestedKey: {
+    width: "30%",
+    textAlign: "left",
+    fontWeight: "bold",
+    paddingRight: 10,
+    color: "#6b7280",
+    paddingTop: 2,
+  },
+  nestedValue: {
+    width: "70%",
+    textAlign: "left",
+    color: "#374151",
+    flexWrap: "wrap",
+  },
+  addressValue: {
+    width: "70%",
+    textAlign: "left",
+    color: "#374151",
+    flexWrap: "wrap",
+    lineHeight: 1.4,
   },
 });
 
-// Component to render a section
+// Improved function to format nested values
+const formatNestedValue = (key, value) => {
+  if (typeof value === "object" && value !== null) {
+    if (Array.isArray(value)) {
+      return value.join(", ");
+    }
+    return Object.entries(value)
+      .map(([k, v]) => `${k}: ${formatNestedValue(k, v)}`)
+      .join(", ");
+  }
+  // Special handling for address fields
+  if (key.toLowerCase().includes("address")) {
+    return String(value);
+  }
+  return String(value);
+};
+
+// Enhanced function to handle any type of manual data
 const renderSection = (title, data) => {
-  // Check if data exists and is an array
+  // Handle case where data is undefined or not an array
   if (!data || !Array.isArray(data)) return null;
 
   return (
     <View>
-      <Text style={styles.sectionHeader}>{title}</Text>
+      <Text style={styles.sectionHeader}>{title.toUpperCase()}</Text>
       {data.map((item, index) => (
         <View key={index} style={styles.subsection}>
-          {Object.keys(item).map((key) => (
-            <View key={key} style={styles.row}>
-              <Text style={styles.key}>{key.replace(/_/g, " ")}:</Text>
-              <Text style={styles.value}>
-                {typeof item[key] === "object"
-                  ? JSON.stringify(item[key], null, 2)
-                  : item[key]}
-              </Text>
+          {Object.entries(item).map(([key, value]) => (
+            <View key={key}>
+              {typeof value !== "object" ? (
+                <View style={styles.row}>
+                  <Text style={styles.key}>
+                    {key.replace(/_/g, " ").toUpperCase()}
+                  </Text>
+                  <Text
+                    style={
+                      key.toLowerCase().includes("address")
+                        ? styles.addressValue
+                        : styles.value
+                    }
+                  >
+                    {value}
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.row}>
+                    <Text style={styles.key}>
+                      {key.replace(/_/g, " ").toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.nestedContainer}>
+                    {Object.entries(value).map(([nestedKey, nestedValue]) => (
+                      <View key={nestedKey} style={styles.nestedRow}>
+                        <Text style={styles.nestedKey}>
+                          {nestedKey.replace(/_/g, " ").toUpperCase()}
+                        </Text>
+                        <Text
+                          style={
+                            nestedKey.toLowerCase().includes("address")
+                              ? styles.addressValue
+                              : styles.nestedValue
+                          }
+                        >
+                          {formatNestedValue(nestedKey, nestedValue)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
             </View>
           ))}
         </View>
@@ -75,56 +188,56 @@ const renderSection = (title, data) => {
   );
 };
 
-// Beautified PDF Document
-const BeautifiedPDF = ({ data }) => {
-  // Helper function to determine document type and structure
-  const getDocumentSections = (data) => {
-    // Check if data has the expected structure
-    if (!data || typeof data !== "object") return null;
+// Enhanced BeautifiedPDF to handle different document types
+const BeautifiedPDF = ({ jsonData }) => {
+  const { data } = jsonData;
 
-    // Handle manual type documents
-    if (data.type && data.type.toLowerCase().includes("manual")) {
-      return (
-        <>
-          <Text style={styles.sectionHeader}>Type</Text>
-          <Text style={styles.value}>{data.type}</Text>
+  // Helper function to get document type
+  const getDocumentType = (type) => {
+    return type ? type.replace(/_/g, " ").toUpperCase() : "DOCUMENT DETAILS";
+  };
 
-          {renderSection(
-            "Assembly and Subassembly Detection",
-            data.assembly_and_subassembly_detection
-          )}
-          {renderSection(
-            "Spare Parts Information",
-            data.spare_parts_information
-          )}
-          {renderSection(
-            "Manufacturer Contact Details",
-            data.manufacturer_contact_details
-          )}
-        </>
-      );
-    }
-
-    // Handle invoice/RFQ type documents
-    else {
-      return (
-        <>
-          {renderSection("Invoice Details", data.invoice_details)}
-          {renderSection("Product Information", data.product_information)}
-          {renderSection("Pricing Details", data.pricing_details)}
-          {renderSection("Supplier Information", data.supplier_information)}
-          {renderSection("Payment Terms", data.payment_terms)}
-          {renderSection("Shipping Details", data.shipping_details)}
-          {/* Add any other sections that might be present in invoice/RFQ data */}
-        </>
-      );
+  // Helper function to determine which sections to render
+  const getSections = (data) => {
+    if (data.type === "invoice") {
+      return [
+        { title: "Invoice Details", data: [data] },
+        { title: "Items", data: data.items },
+        { title: "Payment Instructions", data: [data.payment_instructions] },
+      ];
+    } else {
+      return Object.entries(data)
+        .filter(
+          ([key, value]) =>
+            Array.isArray(value) &&
+            key !== "type" &&
+            key !== "parseTime" &&
+            key !== "formatTime"
+        )
+        .map(([key, value]) => ({
+          title: key.replace(/_/g, " "),
+          data: value,
+        }));
     }
   };
+
+  const sections = getSections(data);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {getDocumentSections(data)}
+        <Text style={styles.header}>{getDocumentType(data.type)}</Text>
+
+        {data.type && (
+          <View style={styles.row}>
+            <Text style={styles.key}>TYPE</Text>
+            <Text style={styles.value}>{data.type}</Text>
+          </View>
+        )}
+
+        {sections.map((section, index) => (
+          <View key={index}>{renderSection(section.title, section.data)}</View>
+        ))}
       </Page>
     </Document>
   );
@@ -132,25 +245,18 @@ const BeautifiedPDF = ({ data }) => {
 
 // Update the PDFPreview component
 const PDFPreview = ({ data }) => {
-  // Get the filename based on document type
+  // Generate filename based on document type
   const getFileName = () => {
-    const docType = data?.data?.type?.toLowerCase() || "";
-    if (docType.includes("manual")) {
-      return "manual_document.pdf";
-    } else if (docType.includes("invoice")) {
-      return "invoice_document.pdf";
-    } else if (docType.includes("rfq")) {
-      return "rfq_document.pdf";
-    }
-    return "processed_document.pdf";
+    const type = data?.data?.type || "document";
+    return `${type.toLowerCase().replace(/\s+/g, "_")}.pdf`;
   };
 
   return (
     <div className="mt-4">
       <h3 className="text-lg font-semibold text-white mb-2">PDF Preview</h3>
-      <div className="bg-white p-4 rounded">
+      <div className=" p-4 rounded">
         <PDFDownloadLink
-          document={<BeautifiedPDF data={data.data} />}
+          document={<BeautifiedPDF jsonData={data} />}
           fileName={getFileName()}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
