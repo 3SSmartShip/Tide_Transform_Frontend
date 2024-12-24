@@ -1,10 +1,165 @@
-// Start of Selection
 import { useState } from "react";
 import { documentsApi } from "../../api/services/documents";
-import { UploadIcon, X, Copy } from "lucide-react";
+import { UploadIcon, X, Copy, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../Layout/Layout";
 import ReactJson from "@microlink/react-json-view";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFDownloadLink,
+} from "@react-pdf/renderer";
+import { jsonToPlainText } from "json-to-plain-text";
+
+// Define PDF styles
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: "column",
+    padding: 20,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 10,
+    marginBottom: 5,
+    textDecoration: "underline",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  key: {
+    flex: 1,
+    textAlign: "left",
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+  value: {
+    flex: 2,
+    textAlign: "left",
+  },
+  subsection: {
+    marginBottom: 10,
+  },
+});
+
+// Component to render a section
+const renderSection = (title, data) => {
+  // Check if data exists and is an array
+  if (!data || !Array.isArray(data)) return null;
+
+  return (
+    <View>
+      <Text style={styles.sectionHeader}>{title}</Text>
+      {data.map((item, index) => (
+        <View key={index} style={styles.subsection}>
+          {Object.keys(item).map((key) => (
+            <View key={key} style={styles.row}>
+              <Text style={styles.key}>{key.replace(/_/g, " ")}:</Text>
+              <Text style={styles.value}>
+                {typeof item[key] === "object"
+                  ? JSON.stringify(item[key], null, 2)
+                  : item[key]}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+};
+
+// Beautified PDF Document
+const BeautifiedPDF = ({ data }) => {
+  // Helper function to determine document type and structure
+  const getDocumentSections = (data) => {
+    // Check if data has the expected structure
+    if (!data || typeof data !== "object") return null;
+
+    // Handle manual type documents
+    if (data.type && data.type.toLowerCase().includes("manual")) {
+      return (
+        <>
+          <Text style={styles.sectionHeader}>Type</Text>
+          <Text style={styles.value}>{data.type}</Text>
+
+          {renderSection(
+            "Assembly and Subassembly Detection",
+            data.assembly_and_subassembly_detection
+          )}
+          {renderSection(
+            "Spare Parts Information",
+            data.spare_parts_information
+          )}
+          {renderSection(
+            "Manufacturer Contact Details",
+            data.manufacturer_contact_details
+          )}
+        </>
+      );
+    }
+
+    // Handle invoice/RFQ type documents
+    else {
+      return (
+        <>
+          {renderSection("Invoice Details", data.invoice_details)}
+          {renderSection("Product Information", data.product_information)}
+          {renderSection("Pricing Details", data.pricing_details)}
+          {renderSection("Supplier Information", data.supplier_information)}
+          {renderSection("Payment Terms", data.payment_terms)}
+          {renderSection("Shipping Details", data.shipping_details)}
+          {/* Add any other sections that might be present in invoice/RFQ data */}
+        </>
+      );
+    }
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {getDocumentSections(data)}
+      </Page>
+    </Document>
+  );
+};
+
+// Update the PDFPreview component
+const PDFPreview = ({ data }) => {
+  // Get the filename based on document type
+  const getFileName = () => {
+    const docType = data?.data?.type?.toLowerCase() || "";
+    if (docType.includes("manual")) {
+      return "manual_document.pdf";
+    } else if (docType.includes("invoice")) {
+      return "invoice_document.pdf";
+    } else if (docType.includes("rfq")) {
+      return "rfq_document.pdf";
+    }
+    return "processed_document.pdf";
+  };
+
+  return (
+    <div className="mt-4">
+      <h3 className="text-lg font-semibold text-white mb-2">PDF Preview</h3>
+      <div className="bg-white p-4 rounded">
+        <PDFDownloadLink
+          document={<BeautifiedPDF data={data.data} />}
+          fileName={getFileName()}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
+        </PDFDownloadLink>
+      </div>
+    </div>
+  );
+};
 
 export default function Upload() {
   const [invoiceFiles, setInvoiceFiles] = useState([]);
@@ -19,6 +174,7 @@ export default function Upload() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [invoiceSuccessMessage, setInvoiceSuccessMessage] = useState("");
   const [manualSuccessMessage, setManualSuccessMessage] = useState("");
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   const handleInvoiceUpload = async () => {
     if (invoiceFiles.length === 0) {
@@ -33,11 +189,22 @@ export default function Upload() {
 
     try {
       const response = await documentsApi.transformDocument(formData);
-      setInvoiceParsedData(response);
-      setInvoiceFiles([]);
-      setInvoiceSuccessMessage("Invoice transformed successfully!");
+      console.log("API Response:", response);
+
+      // Only proceed with PDF generation if we have valid data
+      if (response && Object.keys(response).length > 0) {
+        setInvoiceParsedData(response);
+        setInvoiceFiles([]);
+        setInvoiceSuccessMessage("Invoice transformed successfully!");
+        generatePDF(response);
+      } else {
+        throw new Error("Empty response from API");
+      }
     } catch (err) {
-      setInvoiceError(err.message || "Error processing invoice");
+      console.error("Full error details:", err);
+      setInvoiceError(
+        err.response?.data?.message || err.message || "Error processing invoice"
+      );
     } finally {
       setInvoiceLoading(false);
     }
@@ -56,14 +223,31 @@ export default function Upload() {
 
     try {
       const response = await documentsApi.uploadManual(formData);
-      setManualParsedData(response);
-      setManualFiles([]);
-      setManualSuccessMessage("Manual uploaded and processed successfully!");
+      console.log("API Response:", response);
+
+      // Only proceed with PDF generation if we have valid data
+      if (response && Object.keys(response).length > 0) {
+        setManualParsedData(response);
+        setManualFiles([]);
+        setManualSuccessMessage("Manual uploaded and processed successfully!");
+        generatePDF(response);
+      } else {
+        throw new Error("Empty response from API");
+      }
     } catch (err) {
-      setManualError(err.message || "Error uploading manual");
+      console.error("Full error details:", err);
+      setManualError(
+        err.response?.data?.message || err.message || "Error uploading manual"
+      );
     } finally {
       setManualLoading(false);
     }
+  };
+
+  const generatePDF = (data) => {
+    // No need to manually generate PDF here
+    // PDFDownloadLink will handle it
+    setPdfUrl(true); // Just set to true to indicate PDF is ready
   };
 
   const handleFileChange = (e) => {
@@ -80,6 +264,7 @@ export default function Upload() {
         setManualSuccessMessage("");
         setManualParsedData(null);
       }
+      setPdfUrl(null);
     }
   };
 
@@ -98,6 +283,7 @@ export default function Upload() {
         setManualSuccessMessage("");
         setManualParsedData(null);
       }
+      setPdfUrl(null);
     }
   };
 
@@ -111,6 +297,7 @@ export default function Upload() {
     } else {
       setManualFiles(manualFiles.filter((_, i) => i !== index));
     }
+    setPdfUrl(null);
   };
 
   const handleCopy = () => {
@@ -127,6 +314,10 @@ export default function Upload() {
           console.error("Failed to copy JSON:", err);
         });
     }
+  };
+
+  const getCurrentData = () => {
+    return selectedMode === "invoice" ? invoiceParsedData : manualParsedData;
   };
 
   const UploadView = () => (
@@ -153,6 +344,7 @@ export default function Upload() {
               setManualParsedData(null);
               setManualSuccessMessage("");
               setManualError(null);
+              setPdfUrl(null);
             }}
             className={`px-6 py-2 rounded-md transition-all ${
               selectedMode === "invoice"
@@ -168,6 +360,7 @@ export default function Upload() {
               setInvoiceParsedData(null);
               setInvoiceSuccessMessage("");
               setInvoiceError(null);
+              setPdfUrl(null);
             }}
             className={`px-6 py-2 rounded-md transition-all ${
               selectedMode === "manual"
@@ -324,45 +517,21 @@ export default function Upload() {
         </div>
       )}
 
-      {((selectedMode === "invoice" && invoiceParsedData) ||
-        (selectedMode === "manual" && manualParsedData)) && (
+      {getCurrentData() && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-8 bg-gray-900 rounded-lg p-6 relative"
         >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white">
-              {selectedMode === "invoice"
-                ? "Transformed Document"
-                : "Processed Manual"}
-            </h2>
-            <div className="relative">
-              {copySuccess && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute bottom-full mb-2 bg-black text-white px-4 py-2 rounded-md"
-                >
-                  Copied!
-                </motion.div>
-              )}
-              <button
-                onClick={handleCopy}
-                className="text-white p-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <Copy size={20} />
-              </button>
-            </div>
+          <PDFPreview data={getCurrentData()} />
+          <div className="mt-4">
+            <h2 className="text-xl font-semibold text-white">JSON Response</h2>
+            <ReactJson
+              src={getCurrentData()}
+              theme="monokai"
+              collapsed={false}
+            />
           </div>
-          <ReactJson
-            src={
-              selectedMode === "invoice" ? invoiceParsedData : manualParsedData
-            }
-            theme="monokai"
-            collapsed={false}
-          />
         </motion.div>
       )}
     </motion.div>
