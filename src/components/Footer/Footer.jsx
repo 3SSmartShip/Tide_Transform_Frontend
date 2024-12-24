@@ -18,7 +18,7 @@ export default function Footer() {
                 <div className="flex justify-center">
                   <Link
                     to="/signup"
-                    className="bg-[#e8f902] text-black px-4 sm:px-6 py-2 rounded-md hover:bg-[#d7eb00] transition-colors text-sm sm:text-base font-medium"
+                    className="bg-green-500 text-black px-4 sm:px-6 py-2 rounded-md hover:bg-green-600 transition-colors text-sm sm:text-base font-medium"
                   >
                     Sign Up 
                   </Link>

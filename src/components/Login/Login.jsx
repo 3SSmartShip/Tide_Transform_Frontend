@@ -48,7 +48,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col p-12">
+      <div className="hidden lg:flex lg:w-1/2 flex-col ">
         <div className="flex items-center gap-2 mb-8 -ml-4">
           <img 
             src={TideTransformLogo} 
@@ -57,7 +57,7 @@ export default function Login() {
           />
         </div>
         
-        <div className="flex-grow flex flex-col justify-center max-w-lg">
+        <div className="flex-grow flex flex-col justify-center max-w-lg p-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">See how it works</h1>
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
@@ -140,21 +140,10 @@ export default function Login() {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember for 30 days
-                  </label>
-                </div>
+                
                 <div className="text-sm">
                   <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                    Forgot password
+                    Forgot password ?
                   </Link>
                 </div>
               </div>

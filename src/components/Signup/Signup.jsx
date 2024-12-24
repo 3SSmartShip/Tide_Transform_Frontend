@@ -31,7 +31,7 @@ export default function SignUp() {
       if (signUpError) throw signUpError;
 
       if (data?.user) {
-        localStorage.setItem('userEmail', email);
+        localStorage.setItem("userEmail", email);
         navigate("/verify-otp");
       }
     } catch (error) {
@@ -44,51 +44,91 @@ export default function SignUp() {
   return (
     <div className="flex min-h-screen">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col p-12">
+      <div className="hidden lg:flex lg:w-1/2 flex-col ">
         <div className="flex items-center gap-2 mb-8 -ml-4">
-          <img 
-            src={TideTransformLogo} 
-            alt="Tide Transform" 
-            className="h-[80px]" 
+          <img
+            src={TideTransformLogo}
+            alt="Tide Transform"
+            className="h-[80px]"
           />
         </div>
-        
-        <div className="flex-grow flex flex-col justify-center max-w-lg">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">See how it works</h1>
+
+        <div className="flex-grow flex flex-col justify-center max-w-lg p-12">
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent font-poppins">
+            See how it works
+          </h1>
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Smart Document Processing</h3>
-                <p className="text-gray-600 text-sm">Transform maritime documents into structured data instantly</p>
+                <h3 className="font-semibold text-lg">
+                  Smart Document Processing
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Transform maritime documents into structured data instantly
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               </div>
               <div>
                 <h3 className="font-semibold text-lg">Lightning Fast</h3>
-                <p className="text-gray-600 text-sm">Get results in seconds with our advanced AI engine</p>
+                <p className="text-gray-600 text-sm">
+                  Get results in seconds with our advanced AI engine
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <svg
+                  className="w-6 h-6 text-purple-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
                 </svg>
               </div>
               <div>
                 <h3 className="font-semibold text-lg">Secure & Reliable</h3>
-                <p className="text-gray-600 text-sm">Your data is protected with enterprise-grade security</p>
+                <p className="text-gray-600 text-sm">
+                  Your data is protected with enterprise-grade security
+                </p>
               </div>
             </div>
           </div>
@@ -98,12 +138,22 @@ export default function SignUp() {
       {/* Right side - Sign Up Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8">
         <div className="w-full max-w-md bg-[#EBF3FF] rounded-[20px] p-8">
-          <h2 className="text-2xl font-semibold text-gray-900">Create an account</h2>
-          <p className="mt-2 text-gray-600">Welcome back! Please enter your details.</p>
+          <h2
+            className="text-2xl font-semibold text-gray-900"
+            style={{ fontFamily: "Poppins" }}
+          >
+            Create an account
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Welcome back! Please enter your details.
+          </p>
 
           <form onSubmit={handleSignUp} className="mt-8 space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Name*
               </label>
               <input
@@ -118,7 +168,10 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email*
               </label>
               <input
@@ -133,7 +186,10 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password*
               </label>
               <input
@@ -147,37 +203,37 @@ export default function SignUp() {
               />
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4 text-blue-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
-                  <span className="text-sm text-gray-600">Must be at least 8 characters</span>
+                  <span className="text-sm text-gray-600">
+                    Must be at least 8 characters
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4 text-blue-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
-                  <span className="text-sm text-gray-600">Must contain one special character</span>
+                  <span className="text-sm text-gray-600">
+                    Must contain one special character
+                  </span>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember for 30 days
-                </label>
-              </div>
-              <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                  Forgot password
-                </Link>
               </div>
             </div>
 
@@ -194,7 +250,9 @@ export default function SignUp() {
             <div>
               <button
                 type="button"
-                onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+                onClick={() =>
+                  supabase.auth.signInWithOAuth({ provider: "google" })
+                }
                 className="w-full flex items-center justify-center gap-3 py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -221,8 +279,11 @@ export default function SignUp() {
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Already have an account?</span>{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <span className="text-gray-600">Already have an account?</span>{" "}
+            <Link
+              to="/login"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
               Log in
             </Link>
           </div>
@@ -237,4 +298,3 @@ export default function SignUp() {
     </div>
   );
 }
-
