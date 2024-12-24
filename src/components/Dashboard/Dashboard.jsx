@@ -1,4 +1,3 @@
-    // Start of Selection
     import React, { useEffect, useState, useCallback } from "react";
     import { useNavigate } from "react-router-dom";
     import { supabase } from "../../config/supabaseClient";
@@ -232,7 +231,7 @@
                             initial={{ height: 0 }}
                             animate={{ height: `${aiHeight}%` }}
                             transition={{ duration: 0.5 }}
-                            className="w-full bg-[#EEFF00] rounded-t-[4px] relative group cursor-pointer"
+                            className="w-full bg-green-500 rounded-t-[4px] relative group cursor-pointer"
                             style={{ minHeight: item.ai > 0 ? '20px' : '0px' }}
                           >
                             {/* Tooltip */}

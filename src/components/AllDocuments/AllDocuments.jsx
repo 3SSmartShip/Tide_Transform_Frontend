@@ -18,7 +18,7 @@ export default function AllDocuments() {
                 transition={{ duration: 0.5 }}
                 className="text-center"
               >
-                <Clock className="w-16 h-16 text-[#EEFF00] mx-auto mb-4" />
+                <Clock className="w-16 h-16 text-green-500 mx-auto mb-4" />
                 <h2 className="text-3xl font-bold text-white mb-2">Coming Soon</h2>
                 <p className="text-gray-400 text-lg">
                   We're working hard to bring you the best document management experience.

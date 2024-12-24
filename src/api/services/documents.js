@@ -29,10 +29,19 @@ transformApi.interceptors.request.use(
 export const documentsApi = {
   transformDocument: async (formData) => {
     try {
-      const response = await transformApi.post('/api/v1/transform', formData)
+      const response = await transformApi.post('/api/v1/transform/invoice', formData)
       return response.data
     } catch (error) {
       console.error('Transform API Error:', error)
+      throw error
+    }
+  },
+  uploadManual: async (formData) => {
+    try {
+      const response = await transformApi.post('/api/v1/transform/manual', formData)
+      return response.data
+    } catch (error) {
+      console.error('Manual Transform API Error:', error)
       throw error
     }
   }

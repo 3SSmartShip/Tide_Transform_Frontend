@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../config/supabaseClient';
+import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_bw.png";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -37,13 +38,16 @@ export default function ForgotPassword() {
   return (
     <div className="flex min-h-screen">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col p-12">
-        <div className="flex items-center gap-2 mb-16">
-          <img src="/logo.svg" alt="3S Smart Ship" className="h-8" />
-          <span className="text-xl font-semibold">Smart Ship</span>
+      <div className="hidden lg:flex lg:w-1/2 flex-col ">
+      <div className="flex items-center gap-2 mb-8 -ml-4">
+          <img 
+            src={TideTransformLogo} 
+            alt="Tide Transform" 
+            className="h-[80px]" 
+          />
         </div>
         
-        <div className="flex-grow flex flex-col justify-center max-w-lg">
+        <div className="flex-grow flex flex-col justify-center max-w-lg p-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">See how it works</h1>
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
@@ -125,8 +129,8 @@ export default function ForgotPassword() {
 
             {status.type === 'success' && (
               <>
-                <h2 className="text-2xl font-semibold text-gray-900">Check your email</h2>
-                <p className="mt-2 text-gray-600">
+                <h2 className="text-xl font-semibold text-gray-900">Check your email</h2>
+                <p className="mt-1 text-gray-600 text-sm">
                   We sent a password reset link to {status.message}
                 </p>
                 <button
@@ -135,15 +139,6 @@ export default function ForgotPassword() {
                 >
                   Open email app
                 </button>
-                <p className="mt-4 text-center text-sm text-gray-600">
-                  Didn't receive the email?{' '}
-                  <button
-                    onClick={handleSubmit}
-                    className="font-medium text-blue-600 hover:text-blue-500"
-                  >
-                    Click to resend
-                  </button>
-                </p>
               </>
             )}
 
