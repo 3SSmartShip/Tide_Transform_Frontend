@@ -317,7 +317,7 @@ export default function Landing() {
             <h1 className="text-[32px] md:text-[42px] leading-tight font-bold mb-4">
               Automate Complex Maritime
               <br />
-              <span className="text-blue-500">Document</span> Workflows!
+              <span className="text-[#5583F7]">Document</span> Workflows!
             </h1>
             <p className="text-gray-600 mb-8 mx-auto max-w-2xl text-center text-sm md:text-base">
               Turn invoices, RFQs, and manuals into actionable data with 3S AI –
@@ -359,7 +359,7 @@ export default function Landing() {
       <section ref={featuresRef} className="py-16 bg-black px-4" id="features">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <button className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm mb-4">
+            <button className="bg-[#5583F7] text-white px-4 py-1 rounded-full text-sm mb-4">
               Our Features
             </button>
             <h2 className="text-2xl font-bold text-white">
@@ -413,7 +413,7 @@ export default function Landing() {
               onClick={() => handleToggle("invoice")}
               className={`px-4 py-2 rounded-md text-sm transition-all ${
                 selectedType === "invoice"
-                  ? "bg-blue-500 text-white"
+                  ? "bg-[#5583F7] text-white"
                   : "bg-white border border-gray-200"
               }`}
             >
@@ -423,7 +423,7 @@ export default function Landing() {
               onClick={() => handleToggle("manuals")}
               className={`px-4 py-2 rounded-md text-sm transition-all ${
                 selectedType === "manuals"
-                  ? "bg-blue-500 text-white"
+                  ? "bg-[#5583F7] text-white"
                   : "bg-white border border-gray-200"
               }`}
             >
@@ -595,7 +595,7 @@ export default function Landing() {
                   onClick={() => setPricingPeriod("Monthly")}
                   className={`px-4 py-1 rounded-full text-sm transition-colors ${
                     pricingPeriod === "Monthly"
-                      ? "bg-blue-500 text-white"
+                      ? "bg-[#5583F7] text-white"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
@@ -605,7 +605,7 @@ export default function Landing() {
                   onClick={() => setPricingPeriod("Annually")}
                   className={`px-4 py-1 rounded-full text-sm transition-colors ${
                     pricingPeriod === "Annually"
-                      ? "bg-blue-500 text-white"
+                      ? "bg-[#5583F7] text-white"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
@@ -701,7 +701,7 @@ const PricingCard = ({
           : "bg-white text-black border border-black hover:bg-blue-500 hover:text-white"
       }`}
     >
-      {isEnterprise ? "Contact Team" : "Select Plan"}
+      {isEnterprise ? "Contact Sales" : "Select Plan"}
     </button>
     <div className="flex-grow">
       <p className="font-medium mb-4">Features:</p>
