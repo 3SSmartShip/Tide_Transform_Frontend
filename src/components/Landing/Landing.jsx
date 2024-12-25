@@ -220,7 +220,7 @@ export default function Landing() {
               </Link>
               <Link
                 to="/signup"
-                className="bg-[#0066FF] text-white px-4 py-2 rounded-md text-sm flex items-center justify-center"
+                className="bg-[#5583F7] text-white px-4 py-2 rounded-md text-sm flex items-center justify-center"
               >
                 Get Access
               </Link>
@@ -359,7 +359,7 @@ export default function Landing() {
       <section ref={featuresRef} className="py-16 bg-black px-4" id="features">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <button className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm mb-4">
+            <button className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm mb-4">
               Our Features
             </button>
             <h2 className="text-2xl font-bold text-white">
@@ -377,19 +377,19 @@ export default function Landing() {
             <FeatureCard
               title="Document Supported"
               description="3S AI – Marine-Grade Intelligence transforms your Invoices, RFQs, and Manuals into actionable data, ready for seamless JSON integration."
-              image={documentImage}
+              image={workflowImage}
               bgColor="bg-[#1A1A1A]"
             />
             <FeatureCard
               title="Supports PDF & Excel"
               description="Seamlessly Handle PDF and Excel Files with One-Click Upload via Web App!"
-              image={fileSupport}
+              image={documentImage}
               bgColor="bg-[#1A1A1A]"
             />
             <FeatureCard
               title="API-Driven Parsing"
               description="Effortlessly Access Scalable Infrastructure with the Simplicity of an API Integration"
-              image={workflowImage}
+              image={fileSupport}
               bgColor="bg-[#1A1A1A]"
             />
           </div>
@@ -403,8 +403,8 @@ export default function Landing() {
             Upload Your First Document
           </h1>
           <p className="text-gray-600 text-center mb-8">
-            Upload your document in the zone below, or drag and drop and after
-            will you will a well structure json file
+            Upload your document in the zone below, or drag and drop. Afterward,
+            you will receive a well-structured JSON file.
           </p>
 
           {/* Document Type Toggle */}
@@ -595,7 +595,7 @@ export default function Landing() {
                   onClick={() => setPricingPeriod("Monthly")}
                   className={`px-4 py-1 rounded-full text-sm transition-colors ${
                     pricingPeriod === "Monthly"
-                      ? "bg-[#0066FF] text-white"
+                      ? "bg-blue-500 text-white"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
@@ -605,7 +605,7 @@ export default function Landing() {
                   onClick={() => setPricingPeriod("Annually")}
                   className={`px-4 py-1 rounded-full text-sm transition-colors ${
                     pricingPeriod === "Annually"
-                      ? "bg-[#0066FF] text-white"
+                      ? "bg-blue-500 text-white"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
@@ -697,8 +697,8 @@ const PricingCard = ({
     <button
       className={`w-full py-2 rounded-lg mb-8 ${
         isEnterprise
-          ? "bg-blue-600 text-white"
-          : "bg-white text-black border border-black hover:bg-blue-600 hover:text-white"
+          ? "bg-blue-500 text-white"
+          : "bg-white text-black border border-black hover:bg-blue-500 hover:text-white"
       }`}
     >
       {isEnterprise ? "Contact Team" : "Select Plan"}

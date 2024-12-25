@@ -7,7 +7,7 @@ export default function Footer() {
     <>
       <footer className="bg-black text-white relative pt-40 pb-8 ">   
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-32 w-full px-4 sm:px-6 md:w-[700px]">
-              <div className="bg-[#0066FF] rounded-2xl px-6 py-6 sm:px-8 sm:py-8 text-center">
+              <div className="bg-blue-500 rounded-2xl px-6 py-6 sm:px-8 sm:py-8 text-center">
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
                   Ready to try "Tide Transform"?
                 </h2>
