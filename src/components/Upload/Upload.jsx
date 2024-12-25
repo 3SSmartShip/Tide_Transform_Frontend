@@ -14,8 +14,237 @@ import {
 } from "@react-pdf/renderer";
 import { jsonToPlainText } from "json-to-plain-text";
 
-// Define PDF styles
+// Enhanced styles with better structure
 const styles = StyleSheet.create({
+  page: {
+    flexDirection: "column",
+    padding: 30,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 25,
+    textAlign: "center",
+    color: "#2563EB",
+    padding: 10,
+    borderBottom: 1,
+    borderColor: "#2563EB",
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 10,
+    backgroundColor: "#f3f4f6",
+    padding: 8,
+    color: "#1f2937",
+  },
+  row: {
+    flexDirection: "row",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    marginBottom: 4,
+    minHeight: 25,
+    alignItems: "flex-start",
+  },
+  key: {
+    width: "30%",
+    textAlign: "left",
+    fontWeight: "bold",
+    paddingRight: 10,
+    color: "#4b5563",
+    paddingTop: 2,
+  },
+  value: {
+    width: "70%",
+    textAlign: "left",
+    flexWrap: "wrap",
+  },
+  subsection: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 4,
+  },
+  nestedContainer: {
+    marginLeft: 20,
+    marginTop: 4,
+  },
+  nestedRow: {
+    flexDirection: "row",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    marginBottom: 2,
+    alignItems: "flex-start",
+  },
+  nestedKey: {
+    width: "30%",
+    textAlign: "left",
+    fontWeight: "bold",
+    paddingRight: 10,
+    color: "#6b7280",
+    paddingTop: 2,
+  },
+  nestedValue: {
+    width: "70%",
+    textAlign: "left",
+    color: "#374151",
+    flexWrap: "wrap",
+  },
+  addressValue: {
+    width: "70%",
+    textAlign: "left",
+    color: "#374151",
+    flexWrap: "wrap",
+    lineHeight: 1.4,
+  },
+});
+
+// Improved function to format nested values
+const formatNestedValue = (key, value) => {
+  if (typeof value === "object" && value !== null) {
+    if (Array.isArray(value)) {
+      return value.join(", ");
+    }
+    return Object.entries(value)
+      .map(([k, v]) => `${k}: ${formatNestedValue(k, v)}`)
+      .join(", ");
+  }
+  // Special handling for address fields
+  if (key.toLowerCase().includes("address")) {
+    return String(value);
+  }
+  return String(value);
+};
+
+// Enhanced function to handle any type of manual data
+const renderSection = (title, data) => {
+  // Handle case where data is undefined or not an array
+  if (!data || !Array.isArray(data)) return null;
+
+  return (
+    <View>
+      <Text style={styles.sectionHeader}>{title.toUpperCase()}</Text>
+      {data.map((item, index) => (
+        <View key={index} style={styles.subsection}>
+          {Object.entries(item).map(([key, value]) => (
+            <View key={key}>
+              {typeof value !== "object" ? (
+                <View style={styles.row}>
+                  <Text style={styles.key}>
+                    {key.replace(/_/g, " ").toUpperCase()}
+                  </Text>
+                  <Text
+                    style={
+                      key.toLowerCase().includes("address")
+                        ? styles.addressValue
+                        : styles.value
+                    }
+                  >
+                    {value}
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.row}>
+                    <Text style={styles.key}>
+                      {key.replace(/_/g, " ").toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.nestedContainer}>
+                    {Object.entries(value).map(([nestedKey, nestedValue]) => (
+                      <View key={nestedKey} style={styles.nestedRow}>
+                        <Text style={styles.nestedKey}>
+                          {nestedKey.replace(/_/g, " ").toUpperCase()}
+                        </Text>
+                        <Text
+                          style={
+                            nestedKey.toLowerCase().includes("address")
+                              ? styles.addressValue
+                              : styles.nestedValue
+                          }
+                        >
+                          {formatNestedValue(nestedKey, nestedValue)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+};
+
+// Enhanced BeautifiedPDF to handle different document types
+const BeautifiedPDF = ({ jsonData }) => {
+  const { data } = jsonData;
+
+  // Helper function to get document type
+  const getDocumentType = (type) => {
+    return type ? type.replace(/_/g, " ").toUpperCase() : "DOCUMENT DETAILS";
+  };
+
+  // Helper function to determine which sections to render
+  const getSections = (data) => {
+    if (data.type === "invoice") {
+      return [
+        { title: "Invoice Details", data: [data] },
+        { title: "Items", data: data.items },
+        { title: "Payment Instructions", data: [data.payment_instructions] },
+      ];
+    } else {
+      return Object.entries(data)
+        .filter(
+          ([key, value]) =>
+            Array.isArray(value) &&
+            key !== "type" &&
+            key !== "parseTime" &&
+            key !== "formatTime"
+        )
+        .map(([key, value]) => ({
+          title: key.replace(/_/g, " "),
+          data: value,
+        }));
+    }
+  };
+
+  const sections = getSections(data);
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>{getDocumentType(data.type)}</Text>
+
+        {data.type && (
+          <View style={styles.row}>
+            <Text style={styles.key}>TYPE</Text>
+            <Text style={styles.value}>{data.type}</Text>
+          </View>
+        )}
+
+        {sections.map((section, index) => (
+          <View key={index}>{renderSection(section.title, section.data)}</View>
+        ))}
+      </Page>
+    </Document>
+  );
+};
+
+// Define styles for Invoice/RFQ
+const invoiceStyles = StyleSheet.create({
   page: {
     flexDirection: "column",
     padding: 20,
@@ -49,112 +278,106 @@ const styles = StyleSheet.create({
   },
 });
 
-// Component to render a section
-const renderSection = (title, data) => {
-  // Check if data exists and is an array
-  if (!data || !Array.isArray(data)) return null;
+// Component to render invoice items section
+const renderInvoiceItems = (items) => (
+  <View>
+    <Text style={invoiceStyles.sectionHeader}>Items</Text>
+    {items.map((item, index) => (
+      <View key={index} style={invoiceStyles.subsection}>
+        {Object.keys(item).map((key) => (
+          <View key={key} style={invoiceStyles.row}>
+            <Text style={invoiceStyles.key}>{key.replace(/_/g, " ")}:</Text>
+            <Text style={invoiceStyles.value}>{item[key]}</Text>
+          </View>
+        ))}
+      </View>
+    ))}
+  </View>
+);
 
-  return (
-    <View>
-      <Text style={styles.sectionHeader}>{title}</Text>
-      {data.map((item, index) => (
-        <View key={index} style={styles.subsection}>
-          {Object.keys(item).map((key) => (
-            <View key={key} style={styles.row}>
-              <Text style={styles.key}>{key.replace(/_/g, " ")}:</Text>
-              <Text style={styles.value}>
-                {typeof item[key] === "object"
-                  ? JSON.stringify(item[key], null, 2)
-                  : item[key]}
-              </Text>
-            </View>
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-};
-
-// Beautified PDF Document
-const BeautifiedPDF = ({ data }) => {
-  // Helper function to determine document type and structure
-  const getDocumentSections = (data) => {
-    // Check if data has the expected structure
-    if (!data || typeof data !== "object") return null;
-
-    // Handle manual type documents
-    if (data.type && data.type.toLowerCase().includes("manual")) {
-      return (
-        <>
-          <Text style={styles.sectionHeader}>Type</Text>
-          <Text style={styles.value}>{data.type}</Text>
-
-          {renderSection(
-            "Assembly and Subassembly Detection",
-            data.assembly_and_subassembly_detection
-          )}
-          {renderSection(
-            "Spare Parts Information",
-            data.spare_parts_information
-          )}
-          {renderSection(
-            "Manufacturer Contact Details",
-            data.manufacturer_contact_details
-          )}
-        </>
-      );
-    }
-
-    // Handle invoice/RFQ type documents
-    else {
-      return (
-        <>
-          {renderSection("Invoice Details", data.invoice_details)}
-          {renderSection("Product Information", data.product_information)}
-          {renderSection("Pricing Details", data.pricing_details)}
-          {renderSection("Supplier Information", data.supplier_information)}
-          {renderSection("Payment Terms", data.payment_terms)}
-          {renderSection("Shipping Details", data.shipping_details)}
-          {/* Add any other sections that might be present in invoice/RFQ data */}
-        </>
-      );
-    }
-  };
+// Invoice PDF Component
+const InvoicePDF = ({ jsonData }) => {
+  const { data } = jsonData?.data || jsonData;
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        {getDocumentSections(data)}
+      <Page size="A4" style={invoiceStyles.page}>
+        <Text style={invoiceStyles.sectionHeader}>Invoice Details</Text>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Type:</Text>
+          <Text style={invoiceStyles.value}>{data.type}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Customer:</Text>
+          <Text style={invoiceStyles.value}>{data.customer}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Date:</Text>
+          <Text style={invoiceStyles.value}>{data.date}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Invoice No:</Text>
+          <Text style={invoiceStyles.value}>{data.invoice_no}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Order No:</Text>
+          <Text style={invoiceStyles.value}>{data.order_no}</Text>
+        </View>
+
+        {renderInvoiceItems(data.items)}
+
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Discount:</Text>
+          <Text style={invoiceStyles.value}>{data.discount}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Total Amount:</Text>
+          <Text
+            style={invoiceStyles.value}
+          >{`${data.currency} ${data.total_amount}`}</Text>
+        </View>
+
+        <Text style={invoiceStyles.sectionHeader}>Payment Instructions</Text>
+        {Object.entries(data.payment_instructions)
+          .filter(([_, value]) => value) // Only show non-empty values
+          .map(([key, value]) => (
+            <View key={key} style={invoiceStyles.row}>
+              <Text style={invoiceStyles.key}>
+                {key.replace(/_/g, " ").toUpperCase()}:
+              </Text>
+              <Text style={invoiceStyles.value}>{value}</Text>
+            </View>
+          ))}
       </Page>
     </Document>
   );
 };
 
-// Update the PDFPreview component
+// PDFPreview component
 const PDFPreview = ({ data }) => {
-  // Get the filename based on document type
-  const getFileName = () => {
-    const docType = data?.data?.type?.toLowerCase() || "";
-    if (docType.includes("manual")) {
-      return "manual_document.pdf";
-    } else if (docType.includes("invoice")) {
-      return "invoice_document.pdf";
-    } else if (docType.includes("rfq")) {
-      return "rfq_document.pdf";
-    }
-    return "processed_document.pdf";
-  };
+  const isInvoice = data?.data?.data?.type?.toLowerCase().includes("invoice");
+  const fileName = isInvoice
+    ? `invoice_${data?.data?.data?.invoice_no || "document"}.pdf`
+    : `manual_${data?.data?.data?.file_name || "document"}.pdf`;
 
   return (
     <div className="mt-4">
       <h3 className="text-lg font-semibold text-white mb-2">PDF Preview</h3>
-      <div className="bg-white p-4 rounded">
+      <div className="p-4 rounded">
         <PDFDownloadLink
-          document={<BeautifiedPDF data={data.data} />}
-          fileName={getFileName()}
+          document={
+            isInvoice ? (
+              <InvoicePDF jsonData={data} />
+            ) : (
+              <BeautifiedPDF jsonData={data} />
+            )
+          }
+          fileName={fileName}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
+          {({ loading }) =>
+            loading ? "Generating PDF..." : "Download Document"
+          }
         </PDFDownloadLink>
       </div>
     </div>

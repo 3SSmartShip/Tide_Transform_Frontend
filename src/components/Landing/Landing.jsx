@@ -1,7 +1,14 @@
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Link, NavLink } from "react-router-dom";
-import { Upload, ChevronLeft, ChevronRight, Menu, X, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  AlertCircle,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../Footer/Footer";
 import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_navbar.png";
@@ -49,7 +56,10 @@ export default function Landing() {
 
   const onDrop = useCallback(
     (acceptedFiles) => {
-      if ((selectedType === "manuals" && hasManualParsed) || (selectedType === "invoice" && hasInvoiceParsed)) {
+      if (
+        (selectedType === "manuals" && hasManualParsed) ||
+        (selectedType === "invoice" && hasInvoiceParsed)
+      ) {
         setError(
           `You have already parsed a ${selectedType}. Please refresh the page to start over.`
         );
@@ -96,7 +106,9 @@ export default function Landing() {
     if (!selectedFile) return;
 
     if (selectedType === "manuals" && hasManualParsed) {
-      setError("You have already parsed a manual. Please refresh the page to start over.");
+      setError(
+        "You have already parsed a manual. Please refresh the page to start over."
+      );
       return;
     }
 
@@ -124,7 +136,9 @@ export default function Landing() {
       setDocumentUploaded(false);
     } catch (error) {
       console.error(`Error processing ${selectedType}:`, error);
-      setError(`Demo Limit for ${selectedType}. Please register to use this feature.`);
+      setError(
+        `Demo Limit for ${selectedType}. Please register to use this feature.`
+      );
     } finally {
       setLoading(false);
     }
@@ -134,7 +148,7 @@ export default function Landing() {
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
-    }
+    },
   });
 
   const handleCopy = () => {
@@ -178,14 +192,22 @@ export default function Landing() {
               </button>
               <button
                 onClick={() => handleNavigation("Pricing")}
-                className={`px-4 py-2 pr-60 rounded-md ${
+                className={`px-4 py-2  rounded-md ${
                   activeSection === "Pricing"
                     ? " text-blue-500"
-                    : "text-white  pr-60"
+                    : "text-white  "
                 }`}
               >
                 Pricing
               </button>
+              <Link
+                to="/docs"
+                className={`px-4 py-2 pr-40 rounded-md ${
+                  activeSection === "Docs" ? " text-blue-500" : "text-white pr-52"
+                }`}
+              >
+                Docs
+              </Link>
               <Link
                 to="/login"
                 className="bg-black text-white border border-white px-4 py-2 rounded-md text-sm flex items-center justify-center"
@@ -247,6 +269,17 @@ export default function Landing() {
               >
                 Pricing
               </button>
+              <Link
+                to="/docs"
+                className={`w-full text-left px-4 py-2 ${
+                  activeSection === "Docs"
+                    ? "bg-blue-500 text-white"
+                    : "text-white hover:bg-gray-700"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Docs
+              </Link>
               <Link
                 to="/login"
                 className="bg-black text-white px-6 py-2 rounded-md border border-gray-500 text-sm w-full block text-center mb-4 hover:bg-[#0052cc] transition-colors"
@@ -397,7 +430,8 @@ export default function Landing() {
               Document Processing Demo
             </h2>
 
-            {(selectedType === "manuals" && hasManualParsed) || (selectedType === "invoice" && hasInvoiceParsed) ? (
+            {(selectedType === "manuals" && hasManualParsed) ||
+            (selectedType === "invoice" && hasInvoiceParsed) ? (
               <div className="border-2 border-yellow-400 bg-yellow-50 rounded-lg p-4 mb-4">
                 <div className="flex items-center">
                   <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
@@ -686,4 +720,3 @@ const PricingCard = ({
     </div>
   </div>
 );
-
