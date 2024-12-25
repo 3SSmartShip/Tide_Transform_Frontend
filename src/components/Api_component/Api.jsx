@@ -5,7 +5,6 @@ import CreateApiModal from "../CreateApiModel/CreateApiModel";
 import { apiKeysService } from "../../api/services/apiKeys";
 import Layout from "../Layout/Layout";
 import React from "react";
-import { Link } from "react-router-dom";
 
 export default function ApiDashboard() {
   const [apis, setApis] = useState([]);
@@ -135,7 +134,7 @@ export default function ApiDashboard() {
             >
               Create API Key
             </motion.button>
-            <Link to="/docs">
+            <a href="/docs" target="_blank" rel="noopener noreferrer">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -143,7 +142,7 @@ export default function ApiDashboard() {
               >
                 Docs
               </motion.button>
-            </Link>
+            </a>
           </div>
         </div>
 

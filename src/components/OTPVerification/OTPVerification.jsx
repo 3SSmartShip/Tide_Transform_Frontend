@@ -98,11 +98,11 @@
     
       return (
         <div className="min-h-screen bg-white ">
-           <div className="flex items-center gap-2 mb-8 -ml-4">
+           <div className="flex items-center gap-2 mb-8 -ml-4 p-6">
           <img
             src={TideTransformLogo}
             alt="Tide Transform"
-            className="h-[80px]"
+            className="h-45px] w-[200px]"
           />
         </div>
           {/* Back Button */}
