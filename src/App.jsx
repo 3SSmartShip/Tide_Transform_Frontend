@@ -20,6 +20,7 @@ import OTPVerification from "./components/OTPVerification/OTPVerification";
 import AllDocuments from "./components/AllDocuments/AllDocuments";
 import Onboarding from "./components/Onboarding/Onboarding";
 import Layout from "./components/Layout/Layout";
+import Docs from "./components/docs/docs";
 
 function App() {
   const isOnboarded = localStorage.getItem("isOnboarded");
@@ -33,6 +34,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/verify-otp" element={<OTPVerification />} />
+        <Route path="/docs" element={<Docs />} />
 
         <Route
           path="/onboarding"

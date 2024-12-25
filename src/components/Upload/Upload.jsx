@@ -243,24 +243,141 @@ const BeautifiedPDF = ({ jsonData }) => {
   );
 };
 
-// Update the PDFPreview component
+// Define styles for Invoice/RFQ
+const invoiceStyles = StyleSheet.create({
+  page: {
+    flexDirection: "column",
+    padding: 20,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 10,
+    marginBottom: 5,
+    textDecoration: "underline",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  key: {
+    flex: 1,
+    textAlign: "left",
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+  value: {
+    flex: 2,
+    textAlign: "left",
+  },
+  subsection: {
+    marginBottom: 10,
+  },
+});
+
+// Component to render invoice items section
+const renderInvoiceItems = (items) => (
+  <View>
+    <Text style={invoiceStyles.sectionHeader}>Items</Text>
+    {items.map((item, index) => (
+      <View key={index} style={invoiceStyles.subsection}>
+        {Object.keys(item).map((key) => (
+          <View key={key} style={invoiceStyles.row}>
+            <Text style={invoiceStyles.key}>{key.replace(/_/g, " ")}:</Text>
+            <Text style={invoiceStyles.value}>{item[key]}</Text>
+          </View>
+        ))}
+      </View>
+    ))}
+  </View>
+);
+
+// Invoice PDF Component
+const InvoicePDF = ({ jsonData }) => {
+  const { data } = jsonData?.data || jsonData;
+
+  return (
+    <Document>
+      <Page size="A4" style={invoiceStyles.page}>
+        <Text style={invoiceStyles.sectionHeader}>Invoice Details</Text>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Type:</Text>
+          <Text style={invoiceStyles.value}>{data.type}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Customer:</Text>
+          <Text style={invoiceStyles.value}>{data.customer}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Date:</Text>
+          <Text style={invoiceStyles.value}>{data.date}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Invoice No:</Text>
+          <Text style={invoiceStyles.value}>{data.invoice_no}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Order No:</Text>
+          <Text style={invoiceStyles.value}>{data.order_no}</Text>
+        </View>
+
+        {renderInvoiceItems(data.items)}
+
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Discount:</Text>
+          <Text style={invoiceStyles.value}>{data.discount}</Text>
+        </View>
+        <View style={invoiceStyles.row}>
+          <Text style={invoiceStyles.key}>Total Amount:</Text>
+          <Text
+            style={invoiceStyles.value}
+          >{`${data.currency} ${data.total_amount}`}</Text>
+        </View>
+
+        <Text style={invoiceStyles.sectionHeader}>Payment Instructions</Text>
+        {Object.entries(data.payment_instructions)
+          .filter(([_, value]) => value) // Only show non-empty values
+          .map(([key, value]) => (
+            <View key={key} style={invoiceStyles.row}>
+              <Text style={invoiceStyles.key}>
+                {key.replace(/_/g, " ").toUpperCase()}:
+              </Text>
+              <Text style={invoiceStyles.value}>{value}</Text>
+            </View>
+          ))}
+      </Page>
+    </Document>
+  );
+};
+
+// PDFPreview component
 const PDFPreview = ({ data }) => {
-  // Generate filename based on document type
-  const getFileName = () => {
-    const type = data?.data?.type || "document";
-    return `${type.toLowerCase().replace(/\s+/g, "_")}.pdf`;
-  };
+  const isInvoice = data?.data?.data?.type?.toLowerCase().includes("invoice");
+  const fileName = isInvoice
+    ? `invoice_${data?.data?.data?.invoice_no || "document"}.pdf`
+    : `manual_${data?.data?.data?.file_name || "document"}.pdf`;
 
   return (
     <div className="mt-4">
       <h3 className="text-lg font-semibold text-white mb-2">PDF Preview</h3>
-      <div className=" p-4 rounded">
+      <div className="p-4 rounded">
         <PDFDownloadLink
-          document={<BeautifiedPDF jsonData={data} />}
-          fileName={getFileName()}
+          document={
+            isInvoice ? (
+              <InvoicePDF jsonData={data} />
+            ) : (
+              <BeautifiedPDF jsonData={data} />
+            )
+          }
+          fileName={fileName}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
+          {({ loading }) =>
+            loading ? "Generating PDF..." : "Download Document"
+          }
         </PDFDownloadLink>
       </div>
     </div>
