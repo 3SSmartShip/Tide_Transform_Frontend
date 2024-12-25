@@ -203,8 +203,12 @@ export default function Landing() {
               <Link
                 to="/docs"
                 className={`px-4 py-2 pr-40 rounded-md ${
-                  activeSection === "Docs" ? " text-blue-500" : "text-white pr-52"
+                  activeSection === "Docs"
+                    ? " text-blue-500"
+                    : "text-white pr-52"
                 }`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Docs
               </Link>
@@ -277,6 +281,8 @@ export default function Landing() {
                     : "text-white hover:bg-gray-700"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Docs
               </Link>
