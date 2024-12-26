@@ -176,7 +176,10 @@ export default function Layout({ children }) {
               {planDetails.used}/{planDetails.total} Pages Used
             </p>
           </div>
-          <button className="w-full mt-4 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+          <button
+            className="w-full mt-4 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+            onClick={() => navigate("/billings")}
+          >
             Upgrade Plan
           </button>
         </div>
@@ -201,7 +204,7 @@ export default function Layout({ children }) {
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
                   <div className="bg-[#1A1A1A] rounded-full w-8 h-8 flex items-center justify-center text-white">
-                    {userName ? userName.charAt(0).toUpperCase() : "V"}
+                    {userName ? userName.charAt(0).toUpperCase() : ""}
                   </div>
                   <ChevronDown
                     className={`w-4 h-4 transform transition-transform ${
@@ -244,13 +247,15 @@ export default function Layout({ children }) {
                               className="h-full bg-blue-500 rounded-full"
                               style={{
                                 width: `${
-                                  (planDetails.used / planDetails.total) *
-                                  100
+                                  (planDetails.used / planDetails.total) * 100
                                 }%`,
                               }}
                             />
                           </div>
-                          <button className="w-full py-2 border border-gray-700 rounded-md hover:bg-gray-800 transition-colors text-white">
+                          <button
+                            className="w-full py-2 border border-gray-700 rounded-md hover:bg-gray-800 transition-colors text-white "
+                            onClick={() => navigate("/billings")}
+                          >
                             Upgrade Plan
                           </button>
                         </div>
