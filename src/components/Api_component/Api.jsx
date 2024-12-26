@@ -21,10 +21,10 @@ export default function ApiDashboard() {
       setApis(
         data.map((api) => ({
           id: api.id,
-          key: api.value, // Map the value to key
-          name: api.name || "Unnamed API", // Assuming you have a name field, otherwise set a default
-          created_at: api.createdAt, // Map createdAt to created_at
-          expires_at: api.expiresAt, // Map expiresAt if needed
+          key: api.value,
+          name: api.name || "Unnamed API",
+          created_at: api.createdAt,
+          expires_at: api.expiresAt,
           visible: false,
         }))
       );
@@ -148,40 +148,36 @@ export default function ApiDashboard() {
 
         <motion.div className="bg-zinc-900 rounded-lg">
           <div className="p-6">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="text-left pb-3 text-zinc-400 font-medium">
-                    API Name
-                  </th>
-                  <th className="text-left pb-3 text-zinc-400 font-medium">
-                    API Key
-                  </th>
-                  <th className="text-left pb-3 text-zinc-400 font-medium">
-                    Created
-                  </th>
-                  <th className="text-left pb-3 text-zinc-400 font-medium">
-                    Expires
-                  </th>
-                  <th className="text-left pb-3 text-zinc-400 font-medium">
-                    Status
-                  </th>
-                  <th className="text-left pb-3 text-zinc-400 font-medium w-[50px]"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {apis.map((api) => {
-                  const currentDate = new Date();
-                  const createdDate = new Date(api.created_at);
-                  const expiresDate = new Date(api.expires_at);
-                  const isActive =
-                    currentDate >= createdDate && currentDate <= expiresDate;
-
-                  return (
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full text-center">
+                <span className="text-white">Loading APIs...</span>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-zinc-800">
+                    <th className="text-left pb-3 text-zinc-400 font-medium">
+                      API Name
+                    </th>
+                    <th className="text-left pb-3 text-zinc-400 font-medium">
+                      API Key
+                    </th>
+                    <th className="text-left pb-3 text-zinc-400 font-medium">
+                      Created
+                    </th>
+                    <th className="text-left pb-3 text-zinc-400 font-medium">
+                      Expires
+                    </th>
+                    <th className="text-left pb-3 text-zinc-400 font-medium">
+                      Status
+                    </th>
+                    <th className="text-left pb-3 text-zinc-400 font-medium w-[50px]"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {apis.map((api) => (
                     <motion.tr
                       key={api.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
                       className="border-b border-zinc-800"
                     >
                       <td className="py-4 font-medium text-white">
@@ -204,14 +200,10 @@ export default function ApiDashboard() {
                         </div>
                       </td>
                       <td className="py-4 text-zinc-400">
-                        {api.created_at
-                          ? new Date(api.created_at).toLocaleDateString()
-                          : "N/A"}
+                        {new Date(api.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-4 text-zinc-400">
-                        {api.expires_at
-                          ? new Date(api.expires_at).toLocaleDateString()
-                          : "N/A"}
+                        {new Date(api.expires_at).toLocaleDateString()}
                       </td>
                       <td className="py-4">
                         <span
@@ -237,10 +229,10 @@ export default function ApiDashboard() {
                         </button>
                       </td>
                     </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </motion.div>
 
