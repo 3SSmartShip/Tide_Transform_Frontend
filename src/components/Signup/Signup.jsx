@@ -44,8 +44,8 @@ export default function SignUp() {
   return (
     <div className="flex min-h-screen">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col ">
-        <div className="flex items-center gap-2 mb-8 -ml-4 p-6">
+      <div className="hidden lg:flex lg:w-1/2 flex-col px-8">
+        <div className="flex items-center gap-2 mb-8 -ml-4 p-6 pl-16 mt-4">
           <img
             src={TideTransformLogo}
             alt="Tide Transform"
@@ -136,7 +136,7 @@ export default function SignUp() {
       </div>
 
       {/* Right side - Sign Up Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white px-8">
         <div className="w-full max-w-md bg-[#EBF3FF] rounded-[20px] p-8">
           <h2
             className="text-2xl font-semibold text-gray-900"
@@ -278,7 +278,7 @@ export default function SignUp() {
             </div>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-left text-sm">
             <span className="text-gray-600">Already have an account?</span>{" "}
             <Link
               to="/login"
@@ -298,3 +298,4 @@ export default function SignUp() {
     </div>
   );
 }
+

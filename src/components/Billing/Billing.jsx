@@ -13,7 +13,7 @@ export default function Billing() {
       {
         name: "API Only",
         price: "99",
-        period: "/monthly",
+        period: "/Monthly",
         features: [
           "PDF, docx, slides, and images 5,000 pages per month",
           "Structured data extraction",
@@ -34,7 +34,7 @@ export default function Billing() {
       {
         name: "API Only",
         price: "999",
-        period: "/annually",
+        period: "/Annually",
         features: [
           "PDF, docx, slides, and images 5,000 pages per month",
           "Structured data extraction",
