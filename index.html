@@ -1,17 +1,73 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/pagelogo.png" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tide Transform | 3S</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/pagelogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Your AI Voyage Master" />
+  <title id="page-title">Tide Transform | 3S</title>
+  <script>
+    // Function to update the title based on the current URL
+    function updateTitle() {
+      const titleElement = document.getElementById("page-title");
+      const path = window.location.pathname; // Get the current path
+
+      // Determine the title based on the path
+      let title = "Tide Transform | 3S"; // Default title
+
+      if (path.includes("/login")) {
+        title += " | Login";
+      } else if (path.includes("/signup")) {
+        title += " | Signup";
+      } else if (path.includes("/dashboard")) {
+        title = "Dashboard | Tide Transform"; // Updated title for dashboard
+      } else if (path.includes("/upload")) {
+        title = " Dashboard | Tide Transform";
+      } else if (path.includes("/settings")) {
+        title = " Dashboard | Tide Transform";
+      } else if (path.includes("/docs")) {
+        title = "API Docs | Tide Transform"; // Updated title for API Docs
+      } else if (path.includes("/billings")) {
+        title = " Dashboard | Tide Transform";
+      } else if (path.includes("/onboarding")) {
+        title = " | Onboarding";
+      } else if (path.includes("/forgot-password")) {
+        title += " | Forgot Password";
+      } else if (path.includes("/all-documents")) {
+        title = "  Dashboard | Tide Transform";
+      } else if (path === "/") {
+        title = "Tide Transform | 3S"; // Set title to default for landing
+      }
+
+      titleElement.textContent = title; // Set the title
+    }
+
+    // Call the function on page load
+    window.onload = updateTitle;
+
+    // Listen for popstate events to update the title on navigation
+    window.addEventListener("popstate", updateTitle);
+
+    // Override pushState and replaceState to update the title on navigation
+    const originalPushState = history.pushState;
+    history.pushState = function (state, title, url) {
+      originalPushState.apply(history, arguments);
+      updateTitle(); // Update title after pushState
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function (state, title, url) {
+      originalReplaceState.apply(history, arguments);
+      updateTitle(); // Update title after replaceState
+    };
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

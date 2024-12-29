@@ -149,7 +149,7 @@
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
                   <div className="bg-[#1A1A1A] rounded-full w-8 h-8 flex items-center justify-center">
-                    {userInfo.name.charAt(0).toUpperCase() || 'U'}
+                    {userInfo.name.charAt(0).toUpperCase() || ''}
                   </div>
                   <ChevronDown className={`w-4 h-4 transform transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                 </button>

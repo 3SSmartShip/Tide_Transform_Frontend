@@ -48,8 +48,8 @@ export default function Login() {
   return (
     <div className="flex min-h-screen">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col ">
-        <div className="flex items-center gap-2 mb-8 -ml-4 p-6">
+      <div className="hidden lg:flex lg:w-1/2 flex-col px-8">
+        <div className="flex items-center gap-2 mb-8 -ml-4 p-6 pl-16 mt-4">
           <img 
             src={TideTransformLogo} 
             alt="Tide Transform" 
@@ -100,7 +100,7 @@ export default function Login() {
       </div>
 
       {/* Right side */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-8">
         <div className="w-full max-w-md">
           <div className="bg-[#EBF3FF] rounded-3xl p-8 md:p-10">
             <div className="mb-8">
@@ -187,7 +187,7 @@ export default function Login() {
               </div>
             </form>
 
-            <div className="mt-6 text-sm text-center">
+            <div className="mt-6 text-sm text-left">
               <span className="text-gray-600">Don't have an account?</span>{' '}
               <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up
@@ -205,3 +205,4 @@ export default function Login() {
     </div>
   );
 }
+

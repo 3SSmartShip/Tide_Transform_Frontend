@@ -22,6 +22,8 @@ export default function Setting() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingName, setIsUpdatingName] = useState(false); // New state for name update loading
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false); // New state for password update loading
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -59,6 +61,7 @@ export default function Setting() {
   }, []);
 
   const handleNameChange = async () => {
+    setIsUpdatingName(true); // Start loading
     try {
       const { error } = await supabase
         .from("profiles")
@@ -72,10 +75,13 @@ export default function Setting() {
       setMessage("Name updated successfully");
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setIsUpdatingName(false); // Stop loading
     }
   };
 
   const handlePasswordChange = async () => {
+    setIsUpdatingPassword(true); // Start loading
     try {
       console.log("Email:", userData.email);
       console.log("Current Password:", currentPassword);
@@ -116,6 +122,8 @@ export default function Setting() {
     } catch (error) {
       console.error("Error during password change:", error);
       setMessage(error.message);
+    } finally {
+      setIsUpdatingPassword(false); // Stop loading
     }
   };
 
@@ -166,8 +174,9 @@ export default function Setting() {
                     <button
                       onClick={handleNameChange}
                       className="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700"
+                      disabled={isUpdatingName} // Disable button while loading
                     >
-                      Save
+                      {isUpdatingName ? "Saving..." : "Save"} {/* Loader text */}
                     </button>
                     <button
                       onClick={() => setIsEditingName(false)}
@@ -302,12 +311,15 @@ export default function Setting() {
 
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-2 pt-4">
-                    <button
-                      onClick={handlePasswordChange}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                    >
-                      Update Password
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={handlePasswordChange}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                        disabled={isUpdatingPassword} // Disable button while loading
+                      >
+                        {isUpdatingPassword ? "Updating..." : "Update Password"}
+                      </button>
+                    </div>
                     <button
                       onClick={() => setIsEditingPassword(false)}
                       className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"

@@ -190,20 +190,26 @@ const renderSection = (title, data) => {
 
 // Enhanced BeautifiedPDF to handle different document types
 const BeautifiedPDF = ({ jsonData }) => {
-  const { data } = jsonData;
+  // Add null check and provide default empty object
+  const { data = {} } = jsonData || {};
 
-  // Helper function to get document type
+  // Helper function to get document type with null check
   const getDocumentType = (type) => {
     return type ? type.replace(/_/g, " ").toUpperCase() : "DOCUMENT DETAILS";
   };
 
-  // Helper function to determine which sections to render
+  // Helper function to determine which sections to render with null checks
   const getSections = (data) => {
+    if (!data) return [];
+
     if (data.type === "invoice") {
       return [
         { title: "Invoice Details", data: [data] },
-        { title: "Items", data: data.items },
-        { title: "Payment Instructions", data: [data.payment_instructions] },
+        { title: "Items", data: data.items || [] },
+        {
+          title: "Payment Instructions",
+          data: data.payment_instructions ? [data.payment_instructions] : [],
+        },
       ];
     } else {
       return Object.entries(data)
@@ -226,9 +232,9 @@ const BeautifiedPDF = ({ jsonData }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.header}>{getDocumentType(data.type)}</Text>
+        <Text style={styles.header}>{getDocumentType(data?.type)}</Text>
 
-        {data.type && (
+        {data?.type && (
           <View style={styles.row}>
             <Text style={styles.key}>TYPE</Text>
             <Text style={styles.value}>{data.type}</Text>
@@ -355,7 +361,12 @@ const InvoicePDF = ({ jsonData }) => {
 
 // PDFPreview component
 const PDFPreview = ({ data }) => {
-  const isInvoice = data?.data?.data?.type?.toLowerCase().includes("invoice");
+  // Add null checks and early return if data is invalid
+  if (!data || !data.data) {
+    return null;
+  }
+
+  const isInvoice = data?.data?.data?.type?.toLowerCase()?.includes("invoice");
   const fileName = isInvoice
     ? `invoice_${data?.data?.data?.invoice_no || "document"}.pdf`
     : `manual_${data?.data?.data?.file_name || "document"}.pdf`;
@@ -425,9 +436,21 @@ export default function Upload() {
       }
     } catch (err) {
       console.error("Full error details:", err);
-      setInvoiceError(
-        err.response?.data?.message || err.message || "Error processing invoice"
-      );
+      // Check for the specific error message
+      if (
+        err.response?.status === 400 &&
+        err.response?.data?.message ===
+          "Given document is not valid invoice or RFQ"
+      ) {
+        setInvoiceError(JSON.stringify(err.response.data, null, 2));
+      } else {
+        const errorMessage =
+          err.response?.data?.message ||
+          err.message ||
+          "Error processing invoice";
+        setInvoiceError(JSON.stringify({ error: errorMessage }, null, 2));
+      }
+      setInvoiceParsedData(null);
     } finally {
       setInvoiceLoading(false);
     }
@@ -459,9 +482,10 @@ export default function Upload() {
       }
     } catch (err) {
       console.error("Full error details:", err);
-      setManualError(
-        err.response?.data?.message || err.message || "Error uploading manual"
-      );
+      const errorMessage =
+        err.response?.data?.message || err.message || "Error uploading manual";
+      setManualError(JSON.stringify({ error: errorMessage }, null, 2));
+      setManualParsedData(null);
     } finally {
       setManualLoading(false);
     }
@@ -540,7 +564,17 @@ export default function Upload() {
   };
 
   const getCurrentData = () => {
-    return selectedMode === "invoice" ? invoiceParsedData : manualParsedData;
+    if (selectedMode === "invoice") {
+      return (
+        invoiceParsedData ||
+        (invoiceError ? { error: JSON.parse(invoiceError) } : null)
+      );
+    } else {
+      return (
+        manualParsedData ||
+        (manualError ? { error: JSON.parse(manualError) } : null)
+      );
+    }
   };
 
   const UploadView = () => (
@@ -669,7 +703,9 @@ export default function Upload() {
             exit={{ opacity: 0, y: -10 }}
             className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md"
           >
-            <p className="text-red-400">{invoiceError}</p>
+            <pre className="text-red-400 whitespace-pre-wrap">
+              {invoiceError}
+            </pre>
           </motion.div>
         )}
       </AnimatePresence>
@@ -682,7 +718,9 @@ export default function Upload() {
             exit={{ opacity: 0, y: -10 }}
             className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md"
           >
-            <p className="text-red-400">{manualError}</p>
+            <pre className="text-red-400 whitespace-pre-wrap">
+              {manualError}
+            </pre>
           </motion.div>
         )}
       </AnimatePresence>
@@ -740,20 +778,49 @@ export default function Upload() {
         </div>
       )}
 
-      {getCurrentData() && (
+      {(getCurrentData() || invoiceError || manualError) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-8 bg-gray-900 rounded-lg p-6 relative"
         >
-          <PDFPreview data={getCurrentData()} />
+          {!invoiceError && !manualError && (
+            <PDFPreview data={getCurrentData()} />
+          )}
           <div className="mt-4">
             <h2 className="text-xl font-semibold text-white">JSON Response</h2>
-            <ReactJson
-              src={getCurrentData()}
-              theme="monokai"
-              collapsed={false}
-            />
+            {invoiceError &&
+            err?.response?.status === 400 &&
+            err?.response?.data?.message ===
+              "Given document is not valid invoice or RFQ" ? (
+              <div>
+                <div className="mb-4">
+                  <span className="text-gray-400">Type: </span>
+                  <span className="text-red-400">Error</span>
+                </div>
+                <div className="mb-4">
+                  <span className="text-gray-400">Status: </span>
+                  <span className="text-yellow-400">400</span>
+                </div>
+                <ReactJson
+                  src={JSON.parse(invoiceError)}
+                  theme="monokai"
+                  collapsed={false}
+                  displayDataTypes={false}
+                  displayObjectSize={false}
+                />
+              </div>
+            ) : (
+              <ReactJson
+                src={
+                  getCurrentData() || {
+                    error: JSON.parse(invoiceError || manualError),
+                  }
+                }
+                theme="monokai"
+                collapsed={false}
+              />
+            )}
           </div>
         </motion.div>
       )}
