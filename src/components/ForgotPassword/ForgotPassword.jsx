@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabaseClient";
@@ -110,6 +110,8 @@ export default function ForgotPassword() {
       setSuccessMessage("Password changed successfully!");
       setNewPassword("");
       setConfirmPassword("");
+
+      navigate("/login");
     } catch (error) {
       setError("Failed to change password. Please try again.");
     } finally {
@@ -289,13 +291,19 @@ export default function ForgotPassword() {
                       value={digit}
                       onChange={(e) => handleChange(e, index)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        if (
+                          e.key === "Backspace" &&
+                          !e.target.value &&
+                          index > 0
+                        ) {
                           inputsRef.current[index - 1].focus();
                         }
                       }}
                       onPaste={(e) => {
                         e.preventDefault();
-                        const pastedData = e.clipboardData.getData('text/plain').slice(0, 6 - index);
+                        const pastedData = e.clipboardData
+                          .getData("text/plain")
+                          .slice(0, 6 - index);
                         const newOtp = [...otp];
                         for (let i = 0; i < pastedData.length; i++) {
                           if (index + i < 6) {
@@ -314,7 +322,7 @@ export default function ForgotPassword() {
                 </div>
                 <button
                   type="submit"
-                  disabled={isLoading || otp.join('').length !== 6}
+                  disabled={isLoading || otp.join("").length !== 6}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   {isLoading ? "Verifying..." : "Verify OTP"}
@@ -336,10 +344,7 @@ export default function ForgotPassword() {
                 Choose a strong password for your account.
               </p>
 
-              <form
-                onSubmit={handleChangePassword}
-                className="mt-8 space-y-6"
-              >
+              <form onSubmit={handleChangePassword} className="mt-8 space-y-6">
                 <div>
                   <label
                     htmlFor="new-password"
@@ -459,8 +464,16 @@ export default function ForgotPassword() {
               className="mt-4 text-center"
             >
               <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-800">
-                <svg className="mr-2 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <svg
+                  className="mr-2 h-5 w-5 text-green-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {successMessage}
               </div>
@@ -480,4 +493,3 @@ export default function ForgotPassword() {
     </div>
   );
 }
-
