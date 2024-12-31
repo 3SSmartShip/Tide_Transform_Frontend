@@ -8,7 +8,6 @@ const getAccessToken = async () => {
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_TIDE_TRANSFORM_BASE_URL,
-  timeout: 120000,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'multipart/form-data'
