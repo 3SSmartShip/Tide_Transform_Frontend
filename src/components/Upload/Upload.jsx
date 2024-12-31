@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#2563EB",
     padding: 10,
-    borderBottom: 1,
-    borderColor: "#2563EB",
+    borderBottomWidth: 1,
+    borderBottomColor: "#2563EB",
   },
   sectionHeader: {
     fontSize: 14,
@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     width: "70%",
     textAlign: "left",
     flexWrap: "wrap",
+    marginLeft: 40,
   },
   subsection: {
     marginBottom: 15,
@@ -106,6 +107,36 @@ const styles = StyleSheet.create({
     color: "#374151",
     flexWrap: "wrap",
     lineHeight: 1.4,
+  },
+  section: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 4,
+  },
+  label: {
+    width: "30%",
+    textAlign: "left",
+    fontWeight: "bold",
+    color: "#374151",
+    borderRightWidth: 1,
+    borderRightColor: "#e5e7eb",
+    paddingRight: 10,
+  },
+  itemBox: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#f9fafb",
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    marginVertical: 10,
   },
 });
 
@@ -188,172 +219,153 @@ const renderSection = (title, data) => {
   );
 };
 
-// Enhanced BeautifiedPDF to handle different document types
+// BeautifiedPDF component for manuals
 const BeautifiedPDF = ({ jsonData }) => {
-  // Add null check and provide default empty object
-  const { data = {} } = jsonData || {};
+  const { data } = jsonData?.data || jsonData;
 
-  // Helper function to get document type with null check
-  const getDocumentType = (type) => {
-    return type ? type.replace(/_/g, " ").toUpperCase() : "DOCUMENT DETAILS";
-  };
-
-  // Helper function to determine which sections to render with null checks
-  const getSections = (data) => {
-    if (!data) return [];
-
-    if (data.type === "invoice") {
-      return [
-        { title: "Invoice Details", data: [data] },
-        { title: "Items", data: data.items || [] },
-        {
-          title: "Payment Instructions",
-          data: data.payment_instructions ? [data.payment_instructions] : [],
-        },
-      ];
-    } else {
-      return Object.entries(data)
-        .filter(
-          ([key, value]) =>
-            Array.isArray(value) &&
-            key !== "type" &&
-            key !== "parseTime" &&
-            key !== "formatTime"
-        )
-        .map(([key, value]) => ({
-          title: key.replace(/_/g, " "),
-          data: value,
-        }));
-    }
-  };
-
-  const sections = getSections(data);
+  const sections = [
+    {
+      title: "Assembly and Subassembly Details",
+      data: data?.assembly_and_subassembly_detection?.map((item) => ({
+        "Part Number": item.part_number,
+        "Maker Name": item.maker_details?.name,
+        "Maker Address": item.maker_details?.address,
+        "Contact Phone": item.maker_details?.contact?.phone,
+        "Contact Email": item.maker_details?.contact?.email,
+        "Serial Number": item.serial_number,
+        Model: item.model,
+        Quantity: item.quantity,
+      })),
+    },
+    {
+      title: "Spare Parts Information",
+      data: data?.spare_parts_information?.map((item) => ({
+        "Part Number": item.part_number,
+        Description: item.description,
+        "Quantity in Stock": item.quantity_in_stock,
+        Compatibility: item.compatibility,
+        Price: item.price,
+      })),
+    },
+    {
+      title: "Manufacturer Contact Details",
+      data: data?.manufacturer_contact_details?.map((item) => ({
+        Name: item.manufacturer_name,
+        Address: item.address,
+        Phone: item.phone,
+        Email: item.email,
+        Website: item.website,
+      })),
+    },
+  ];
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.header}>{getDocumentType(data?.type)}</Text>
-
-        {data?.type && (
-          <View style={styles.row}>
-            <Text style={styles.key}>TYPE</Text>
-            <Text style={styles.value}>{data.type}</Text>
-          </View>
-        )}
+        <Text style={styles.header}>{data?.type || "Manual"}</Text>
 
         {sections.map((section, index) => (
-          <View key={index}>{renderSection(section.title, section.data)}</View>
+          <View key={index}>
+            <Text style={styles.sectionHeader}>{section.title}</Text>
+            {section.data?.map((item, idx) => (
+              <View key={idx} style={styles.section}>
+                {Object.entries(item).map(([key, value]) => (
+                  <View key={key} style={styles.row}>
+                    <Text style={styles.label}>{key}:</Text>
+                    <Text style={styles.value}>{value}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
         ))}
       </Page>
     </Document>
   );
 };
 
-// Define styles for Invoice/RFQ
-const invoiceStyles = StyleSheet.create({
-  page: {
-    flexDirection: "column",
-    padding: 20,
-    fontSize: 10,
-    fontFamily: "Helvetica",
-  },
-  sectionHeader: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginTop: 10,
-    marginBottom: 5,
-    textDecoration: "underline",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  key: {
-    flex: 1,
-    textAlign: "left",
-    fontWeight: "bold",
-    marginRight: 5,
-  },
-  value: {
-    flex: 2,
-    textAlign: "left",
-  },
-  subsection: {
-    marginBottom: 10,
-  },
-});
-
-// Component to render invoice items section
-const renderInvoiceItems = (items) => (
-  <View>
-    <Text style={invoiceStyles.sectionHeader}>Items</Text>
-    {items.map((item, index) => (
-      <View key={index} style={invoiceStyles.subsection}>
-        {Object.keys(item).map((key) => (
-          <View key={key} style={invoiceStyles.row}>
-            <Text style={invoiceStyles.key}>{key.replace(/_/g, " ")}:</Text>
-            <Text style={invoiceStyles.value}>{item[key]}</Text>
-          </View>
-        ))}
-      </View>
-    ))}
-  </View>
-);
-
-// Invoice PDF Component
+// InvoicePDF component
 const InvoicePDF = ({ jsonData }) => {
   const { data } = jsonData?.data || jsonData;
 
   return (
     <Document>
-      <Page size="A4" style={invoiceStyles.page}>
-        <Text style={invoiceStyles.sectionHeader}>Invoice Details</Text>
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Type:</Text>
-          <Text style={invoiceStyles.value}>{data.type}</Text>
-        </View>
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Customer:</Text>
-          <Text style={invoiceStyles.value}>{data.customer}</Text>
-        </View>
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Date:</Text>
-          <Text style={invoiceStyles.value}>{data.date}</Text>
-        </View>
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Invoice No:</Text>
-          <Text style={invoiceStyles.value}>{data.invoice_no}</Text>
-        </View>
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Order No:</Text>
-          <Text style={invoiceStyles.value}>{data.order_no}</Text>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>Invoice Details</Text>
+
+        <View style={styles.section}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Customer:</Text>
+            <Text style={styles.value}>{data.customer}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Date:</Text>
+            <Text style={styles.value}>{data.date}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Invoice No:</Text>
+            <Text style={styles.value}>{data.invoice_no}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Order No:</Text>
+            <Text style={styles.value}>{data.order_no}</Text>
+          </View>
         </View>
 
-        {renderInvoiceItems(data.items)}
+        <Text style={styles.sectionHeader}>Items</Text>
+        {data.items.map((item, index) => (
+          <View key={index} style={styles.itemBox}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Description</Text>
+              <Text style={styles.value}>{item.description}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Part No</Text>
+              <Text style={styles.value}>{item.part_no}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Quantity</Text>
+              <Text style={styles.value}>{item.quantity}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Unit Price</Text>
+              <Text
+                style={styles.value}
+              >{`${item.currency} ${item.unit_price}`}</Text>
+            </View>
+            <View style={[styles.row, { borderBottomWidth: 0 }]}>
+              <Text style={styles.label}>Total Price</Text>
+              <Text
+                style={styles.value}
+              >{`${item.currency} ${item.total_price}`}</Text>
+            </View>
+          </View>
+        ))}
 
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Discount:</Text>
-          <Text style={invoiceStyles.value}>{data.discount}</Text>
-        </View>
-        <View style={invoiceStyles.row}>
-          <Text style={invoiceStyles.key}>Total Amount:</Text>
-          <Text
-            style={invoiceStyles.value}
-          >{`${data.currency} ${data.total_amount}`}</Text>
+        <View style={styles.section}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Discount:</Text>
+            <Text style={styles.value}>{data.discount}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Total Amount:</Text>
+            <Text
+              style={styles.value}
+            >{`${data.currency} ${data.total_amount}`}</Text>
+          </View>
         </View>
 
-        <Text style={invoiceStyles.sectionHeader}>Payment Instructions</Text>
-        {Object.entries(data.payment_instructions)
-          .filter(([_, value]) => value) // Only show non-empty values
-          .map(([key, value]) => (
-            <View key={key} style={invoiceStyles.row}>
-              <Text style={invoiceStyles.key}>
+        <Text style={styles.sectionHeader}>Payment Instructions</Text>
+        <View style={styles.section}>
+          {Object.entries(data.payment_instructions).map(([key, value]) => (
+            <View key={key} style={styles.row}>
+              <Text style={styles.label}>
                 {key.replace(/_/g, " ").toUpperCase()}:
               </Text>
-              <Text style={invoiceStyles.value}>{value}</Text>
+              <Text style={styles.value}>{value}</Text>
             </View>
           ))}
+        </View>
       </Page>
     </Document>
   );
@@ -361,7 +373,6 @@ const InvoicePDF = ({ jsonData }) => {
 
 // PDFPreview component
 const PDFPreview = ({ data }) => {
-  // Add null checks and early return if data is invalid
   if (!data || !data.data) {
     return null;
   }
@@ -409,6 +420,7 @@ export default function Upload() {
   const [invoiceSuccessMessage, setInvoiceSuccessMessage] = useState("");
   const [manualSuccessMessage, setManualSuccessMessage] = useState("");
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [jobStatus, setJobStatus] = useState(null);
 
   const handleInvoiceUpload = async () => {
     if (invoiceFiles.length === 0) {
@@ -420,39 +432,46 @@ export default function Upload() {
     formData.append("file", invoiceFiles[0]);
 
     setInvoiceLoading(true);
+    setInvoiceError(null);
 
     try {
-      const response = await documentsApi.transformDocument(formData);
-      console.log("API Response:", response);
+      const result = await documentsApi.transformDocument(
+        formData,
+        (status) => {
+          setJobStatus(status);
+        }
+      );
 
-      // Only proceed with PDF generation if we have valid data
-      if (response && Object.keys(response).length > 0) {
-        setInvoiceParsedData(response);
+      if (result) {
+        const formattedData = {
+          data: {
+            data: result,
+          },
+        };
+        setInvoiceParsedData(formattedData);
         setInvoiceFiles([]);
         setInvoiceSuccessMessage("Invoice transformed successfully!");
-        generatePDF(response);
-      } else {
-        throw new Error("Empty response from API");
+        setPdfUrl(true);
       }
-    } catch (err) {
-      console.error("Full error details:", err);
-      // Check for the specific error message
-      if (
-        err.response?.status === 400 &&
-        err.response?.data?.message ===
-          "Given document is not valid invoice or RFQ"
-      ) {
-        setInvoiceError(JSON.stringify(err.response.data, null, 2));
-      } else {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Error processing invoice";
-        setInvoiceError(JSON.stringify({ error: errorMessage }, null, 2));
-      }
+    } catch (error) {
+      console.error("Transform error:", error);
+      setInvoiceError(
+        JSON.stringify(
+          {
+            error: {
+              status: error.response?.status || 500,
+              message: error.message || "Error processing invoice",
+            },
+          },
+          null,
+          2
+        )
+      );
       setInvoiceParsedData(null);
+      setPdfUrl(null);
     } finally {
       setInvoiceLoading(false);
+      setJobStatus(null);
     }
   };
 
@@ -466,35 +485,44 @@ export default function Upload() {
     formData.append("file", manualFiles[0]);
 
     setManualLoading(true);
+    setManualError(null);
 
     try {
-      const response = await documentsApi.uploadManual(formData);
-      console.log("API Response:", response);
+      const result = await documentsApi.uploadManual(formData, (status) => {
+        setJobStatus(status);
+      });
 
-      // Only proceed with PDF generation if we have valid data
-      if (response && Object.keys(response).length > 0) {
-        setManualParsedData(response);
+      if (result) {
+        const formattedData = {
+          data: {
+            data: result,
+          },
+        };
+        setManualParsedData(formattedData);
         setManualFiles([]);
-        setManualSuccessMessage("Manual uploaded and processed successfully!");
-        generatePDF(response);
-      } else {
-        throw new Error("Empty response from API");
+        setManualSuccessMessage("Manual processed successfully!");
+        setPdfUrl(true);
       }
-    } catch (err) {
-      console.error("Full error details:", err);
-      const errorMessage =
-        err.response?.data?.message || err.message || "Error uploading manual";
-      setManualError(JSON.stringify({ error: errorMessage }, null, 2));
+    } catch (error) {
+      console.error("Manual processing error:", error);
+      setManualError(
+        JSON.stringify(
+          {
+            error: {
+              status: error.response?.status || 500,
+              message: error.message || "Error processing manual",
+            },
+          },
+          null,
+          2
+        )
+      );
       setManualParsedData(null);
+      setPdfUrl(null);
     } finally {
       setManualLoading(false);
+      setJobStatus(null);
     }
-  };
-
-  const generatePDF = (data) => {
-    // No need to manually generate PDF here
-    // PDFDownloadLink will handle it
-    setPdfUrl(true); // Just set to true to indicate PDF is ready
   };
 
   const handleFileChange = (e) => {
@@ -565,15 +593,29 @@ export default function Upload() {
 
   const getCurrentData = () => {
     if (selectedMode === "invoice") {
-      return (
-        invoiceParsedData ||
-        (invoiceError ? { error: JSON.parse(invoiceError) } : null)
-      );
+      if (invoiceParsedData) {
+        return invoiceParsedData;
+      }
+      if (invoiceError) {
+        try {
+          return JSON.parse(invoiceError);
+        } catch (e) {
+          return { error: invoiceError };
+        }
+      }
+      return null;
     } else {
-      return (
-        manualParsedData ||
-        (manualError ? { error: JSON.parse(manualError) } : null)
-      );
+      if (manualParsedData) {
+        return manualParsedData;
+      }
+      if (manualError) {
+        try {
+          return JSON.parse(manualError);
+        } catch (e) {
+          return { error: manualError };
+        }
+      }
+      return null;
     }
   };
 
@@ -772,9 +814,10 @@ export default function Upload() {
           : "Process Manual"}
       </motion.button>
 
-      {(selectedMode === "invoice" ? invoiceLoading : manualLoading) && (
-        <div className="flex justify-center mt-4">
+      {(invoiceLoading || manualLoading) && (
+        <div className="flex flex-col items-center mt-4">
           <div className="loader"></div>
+          {jobStatus && <p className="text-gray-400 mt-2">{jobStatus}</p>}
         </div>
       )}
 
@@ -790,8 +833,8 @@ export default function Upload() {
           <div className="mt-4">
             <h2 className="text-xl font-semibold text-white">JSON Response</h2>
             {invoiceError &&
-            err?.response?.status === 400 &&
-            err?.response?.data?.message ===
+            getCurrentData()?.error?.status === 400 &&
+            getCurrentData()?.error?.message ===
               "Given document is not valid invoice or RFQ" ? (
               <div>
                 <div className="mb-4">
@@ -803,7 +846,7 @@ export default function Upload() {
                   <span className="text-yellow-400">400</span>
                 </div>
                 <ReactJson
-                  src={JSON.parse(invoiceError)}
+                  src={getCurrentData().error}
                   theme="monokai"
                   collapsed={false}
                   displayDataTypes={false}
@@ -812,11 +855,7 @@ export default function Upload() {
               </div>
             ) : (
               <ReactJson
-                src={
-                  getCurrentData() || {
-                    error: JSON.parse(invoiceError || manualError),
-                  }
-                }
+                src={getCurrentData() || {}}
                 theme="monokai"
                 collapsed={false}
               />
