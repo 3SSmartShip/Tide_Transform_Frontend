@@ -21,6 +21,8 @@ export default function ForgotPassword() {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
@@ -119,11 +121,43 @@ export default function ForgotPassword() {
     }
   };
 
+  const handleResendCode = async () => {
+    setResendDisabled(true);
+    setError(null);
+
+    try {
+      const { error: resendError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        }
+      );
+
+      if (resendError) throw resendError;
+
+      // Start 60-second timer
+      setResendTimer(60);
+      const timer = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setResendDisabled(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error) {
+      setError("Failed to resend code. Please try again.");
+      setResendDisabled(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pl-20 pr-20 ">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col px-8">
-        <div className="flex items-center gap-2 mb-8 -ml-4 p-6 pl-16 mt-4">
+      <div className="hidden lg:flex lg:w-1/2 flex-col px-8 pb-28">
+        <div className="flex items-center gap-2 mb-4 pt-4 pl-12 mt-6">
           <img
             src={TideTransformLogo}
             alt="Tide Transform"
@@ -132,7 +166,7 @@ export default function ForgotPassword() {
         </div>
 
         <div className="flex-grow flex flex-col justify-center max-w-lg p-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent font-poppins">
+          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent font-poppins">
             See how it works
           </h1>
           <div className="space-y-6">
@@ -153,7 +187,7 @@ export default function ForgotPassword() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-m">
                   Smart Document Processing
                 </h3>
                 <p className="text-gray-600 text-sm">
@@ -179,7 +213,7 @@ export default function ForgotPassword() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Lightning Fast</h3>
+                <h3 className="font-semibold text-m">Lightning Fast</h3>
                 <p className="text-gray-600 text-sm">
                   Get results in seconds with our advanced AI engine
                 </p>
@@ -203,7 +237,7 @@ export default function ForgotPassword() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Secure & Reliable</h3>
+                <h3 className="font-semibold text-m">Secure & Reliable</h3>
                 <p className="text-gray-600 text-sm">
                   Your data is protected with enterprise-grade security
                 </p>
@@ -216,14 +250,6 @@ export default function ForgotPassword() {
       {/* Right side - Forgot Password Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-white px-8">
         <div className="w-full max-w-md bg-[#EBF3FF] rounded-[20px] p-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-800"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-
           {/* Email Input Section */}
           {!showOtpInput && !showPasswordInput && (
             <div>
@@ -269,64 +295,101 @@ export default function ForgotPassword() {
           {/* OTP Input Section */}
           {showOtpInput && (
             <div>
-              <h2
-                className="text-2xl font-semibold text-gray-900"
-                style={{ fontFamily: "Poppins" }}
-              >
+              <h2 className="text-[28px] font-semibold text-[#1C1C1C] mb-2">
                 Enter Verification Code
               </h2>
-              <p className="mt-2 text-gray-600">
-                We've sent a code to your email. Please enter it below.
+              <p className="text-[#6B7280] mb-8">
+                We've sent a verification code to your email.
               </p>
 
-              <form onSubmit={handleVerifyOTP} className="mt-8 space-y-6">
-                <div className="flex gap-2">
+              <form onSubmit={handleVerifyOTP}>
+                <div
+                  className="flex gap-4 mb-6"
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pasteData = e.clipboardData.getData("Text").trim();
+                    if (!/^\d{6}$/.test(pasteData)) {
+                      setError("Please paste a 6-digit OTP code.");
+                      return;
+                    }
+                    const pasteOtp = pasteData.split("");
+                    setOtp(pasteOtp);
+                    pasteOtp.forEach((digit, index) => {
+                      if (inputsRef.current[index]) {
+                        inputsRef.current[index].value = digit;
+                      }
+                    });
+                    // Focus the last input
+                    if (inputsRef.current[5]) {
+                      inputsRef.current[5].focus();
+                    }
+                  }}
+                >
                   {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="\d*"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleChange(e, index)}
-                      onKeyDown={(e) => {
-                        if (
-                          e.key === "Backspace" &&
-                          !e.target.value &&
-                          index > 0
-                        ) {
-                          inputsRef.current[index - 1].focus();
-                        }
-                      }}
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const pastedData = e.clipboardData
-                          .getData("text/plain")
-                          .slice(0, 6 - index);
-                        const newOtp = [...otp];
-                        for (let i = 0; i < pastedData.length; i++) {
-                          if (index + i < 6) {
-                            newOtp[index + i] = pastedData[i];
+                    <div key={index} className="w-full">
+                      <input
+                        type="text"
+                        maxLength="1"
+                        value={digit}
+                        onChange={(e) => handleChange(e, index)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Backspace") {
+                            e.preventDefault();
+                            const newOtp = [...otp];
+                            if (newOtp[index]) {
+                              newOtp[index] = "";
+                              setOtp(newOtp);
+                            } else if (index > 0) {
+                              inputsRef.current[index - 1].focus();
+                              newOtp[index - 1] = "";
+                              setOtp(newOtp);
+                            }
+                          } else if (e.key === "ArrowLeft" && index > 0) {
+                            inputsRef.current[index - 1].focus();
+                          } else if (e.key === "ArrowRight" && index < 5) {
+                            inputsRef.current[index + 1].focus();
                           }
-                        }
-                        setOtp(newOtp);
-                        if (index + pastedData.length < 6) {
-                          inputsRef.current[index + pastedData.length].focus();
-                        }
-                      }}
-                      ref={(el) => (inputsRef.current[index] = el)}
-                      className="w-12 h-12 text-center text-xl border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                        }}
+                        ref={(el) => (inputsRef.current[index] = el)}
+                        className="w-full h-14 text-center text-xl font-semibold border-b-2 border-gray-300 bg-transparent focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
                   ))}
                 </div>
+
                 <button
                   type="submit"
                   disabled={isLoading || otp.join("").length !== 6}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="w-full bg-[#0066FF] text-white py-4 rounded-xl font-medium text-base hover:bg-blue-600 transition-colors"
                 >
-                  {isLoading ? "Verifying..." : "Verify OTP"}
+                  {isLoading ? "Verifying..." : "Verify Code"}
                 </button>
+
+                <div className="mt-6 text-left">
+                  <p className="text-gray-600 text-sm">
+                    Didn't receive the code?{" "}
+                    {resendTimer > 0 ? (
+                      <span className="text-gray-500">
+                        Resend in {resendTimer}s
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendCode}
+                        disabled={resendDisabled}
+                        className="text-[#0066FF] font-medium hover:text-blue-700 disabled:text-gray-400"
+                      >
+                        Click to resend
+                      </button>
+                    )}
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mt-4 text-red-600 text-sm text-center">
+                    {error}
+                  </div>
+                )}
               </form>
             </div>
           )}
@@ -480,14 +543,14 @@ export default function ForgotPassword() {
             </motion.div>
           )}
 
-          <div className="mt-6 text-left text-sm">
+          {/* <div className="mt-6 text-left text-sm">
             <Link
               to="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Back to login
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

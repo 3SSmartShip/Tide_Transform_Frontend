@@ -1,15 +1,41 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../config/supabaseClient';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../../config/supabaseClient";
 import TideTransformLogo from "../../assets/logos/Tide_Transform_logo_bw.png";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN") {
+          if (session?.user) {
+            // Check if user exists in profiles table
+            const { data: userProfile, error: profileError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+
+            if (profileError || !userProfile) {
+              navigate("/onboarding");
+            } else {
+              navigate("/dashboard");
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,75 +50,165 @@ export default function Login() {
 
       if (error) {
         setError(error.message);
+        return;
+      }
+
+      // Check if user exists in profiles table
+      const { data: userProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileError || !userProfile) {
+        // User doesn't exist in profiles table - redirect to onboarding
+        navigate("/onboarding");
       } else {
-        navigate('/dashboard');
+        // User exists - redirect to dashboard
+        navigate("/dashboard");
       }
     } catch (error) {
-      setError('An error occurred during login');
+      setError("An error occurred during login");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+  
     try {
+      // Step 1: Initiate Google Sign-In
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
+        options: {
+          queryParams: {
+            access_type: "offline",
+            prompt: "select_account",
+          },
+        },
       });
+  
       if (error) throw error;
+  
+      // Step 2: Check if the user is authenticated
+      const user = data?.user;
+      if (user) {
+        // Step 3: Check if the user's profile exists in the "profiles" table
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+  
+        if (profileError && profileError.code === "PGRST116") {
+          // Redirect new user to onboarding if no profile found
+          navigate("/onboarding");
+        } else if (profile) {
+          // Redirect existing user to dashboard
+          navigate("/dashboard");
+        } else {
+          throw new Error("Unexpected error while fetching user profile.");
+        }
+      }
     } catch (error) {
-      setError(error.message);
+      console.error("Google Sign-In Error:", error.message);
+      setError("Unable to sign in with Google. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+  
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pl-20 pr-20">
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col px-8">
-        <div className="flex items-center gap-2 mb-8 -ml-4 p-6 pl-16 mt-4">
-          <img 
-            src={TideTransformLogo} 
-            alt="Tide Transform" 
-            className="h-45px] w-[200px]" 
+      <div className="hidden lg:flex lg:w-1/2 flex-col px-8 pb-48">
+        <div className="flex items-center gap-2 mb-4 pt-4 pl-12 mt-6">
+          <img
+            src={TideTransformLogo}
+            alt="Tide Transform"
+            className="h-45px] w-[200px]"
           />
         </div>
-        
+
         <div className="flex-grow flex flex-col justify-center max-w-lg p-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">See how it works</h1>
+          <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            See how it works
+          </h1>
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Smart Document Processing</h3>
-                <p className="text-gray-600 text-sm">Transform maritime documents into structured data instantly</p>
+                <h3 className="font-semibold text-m">
+                  Smart Document Processing
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Transform maritime documents into structured data instantly
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Lightning Fast</h3>
-                <p className="text-gray-600 text-sm">Get results in seconds with our advanced AI engine</p>
+                <h3 className="font-semibold text-m">Lightning Fast</h3>
+                <p className="text-gray-600 text-sm">
+                  Get results in seconds with our advanced AI engine
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <svg
+                  className="w-6 h-6 text-purple-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Secure & Reliable</h3>
-                <p className="text-gray-600 text-sm">Your data is protected with enterprise-grade security</p>
+                <h3 className="font-semibold text-m">Secure & Reliable</h3>
+                <p className="text-gray-600 text-sm">
+                  Your data is protected with enterprise-grade security
+                </p>
               </div>
             </div>
           </div>
@@ -100,17 +216,24 @@ export default function Login() {
       </div>
 
       {/* Right side */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-8 pt-28">
         <div className="w-full max-w-md">
           <div className="bg-[#EBF3FF] rounded-3xl p-8 md:p-10">
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900">Log in to your account</h2>
-              <p className="mt-2 text-gray-600">Welcome back! Please enter your details.</p>
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Log in to your account
+              </h2>
+              <p className="mt-2 text-gray-600">
+                Welcome back! Please enter your details.
+              </p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Email
                 </label>
                 <input
@@ -125,7 +248,10 @@ export default function Login() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <input
@@ -140,9 +266,11 @@ export default function Login() {
               </div>
 
               <div className="flex items-center justify-between">
-                
                 <div className="text-sm">
-                  <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                  <Link
+                    to="/forgot-password"
+                    className="font-medium text-blue-600 hover:text-blue-500"
+                  >
                     Forgot password ?
                   </Link>
                 </div>
@@ -152,9 +280,9 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
                 >
-                  {loading ? 'Signing in...' : 'Sign in'}
+                  {loading ? "Signing in..." : "Sign in"}
                 </button>
               </div>
 
@@ -162,6 +290,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
+                  disabled={loading}
                   className="w-full flex items-center justify-center gap-3 py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -182,14 +311,17 @@ export default function Login() {
                       fill="#EA4335"
                     />
                   </svg>
-                  Sign in with Google
+                  {loading ? "Signing in..." : "Sign in with Google"}
                 </button>
               </div>
             </form>
 
             <div className="mt-6 text-sm text-left">
-              <span className="text-gray-600">Don't have an account?</span>{' '}
-              <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              <span className="text-gray-600">Don't have an account?</span>{" "}
+              <Link
+                to="/signup"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
                 Sign up
               </Link>
             </div>
@@ -205,4 +337,3 @@ export default function Login() {
     </div>
   );
 }
-

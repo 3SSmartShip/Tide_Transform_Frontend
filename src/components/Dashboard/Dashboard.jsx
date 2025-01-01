@@ -25,12 +25,11 @@ export default function Dashboard() {
   const [usageData, setUsageData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [totalCount, setTotalCount] = useState(0);
-  const [selectedPeriod, setSelectedPeriod] = useState("week");
+  const [selectedPeriod, setSelectedPeriod] = useState("daily");
   const [isNavigating, setIsNavigating] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
   const [metrics, setMetrics] = useState([
     { label: "Total Pages", value: 0 },
-    { label: "API Created", value: 0 },
     { label: "Pattern Detection Parsing", value: 0 },
     { label: "3S AI Parsing", value: 0 },
   ]);
@@ -61,6 +60,39 @@ export default function Dashboard() {
 
   const handleUpgradePlanClick = () => {
     navigate("/billing", { state: { activeTab: "plan" } });
+  };
+
+  // Helper function to format dates
+  const formatDateForAPI = (date) => {
+    return date.toISOString().split(".")[0] + "Z";
+  };
+
+  // Get date range based on selected period
+  const getDateRange = (period) => {
+    const endDate = new Date();
+    let startDate = new Date();
+
+    switch (period) {
+      case "daily":
+        startDate.setDate(endDate.getDate() - 7);
+        break;
+      case "monthly":
+        startDate.setMonth(endDate.getMonth() - 12); // Last 12 months
+        break;
+      case "yearly":
+        startDate.setFullYear(endDate.getFullYear() - 5); // Last 5 years
+        break;
+      default:
+        startDate.setDate(endDate.getDate() - 7);
+    }
+
+    const range = {
+      startTime: formatDateForAPI(startDate),
+      endTime: formatDateForAPI(endDate),
+    };
+
+    console.log(`Date Range for ${period}:`, range);
+    return range;
   };
 
   // Function declarations
@@ -169,30 +201,46 @@ export default function Dashboard() {
     }
   }
 
-  // useEffect for fetching dashboard data
+  // useEffect for fetching activity data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const activityData = await dashboardStatsService.getActivityStats(
-          selectedPeriod
-        );
+        const { startTime, endTime } = getDateRange(selectedPeriod);
 
-        // Log the activity data to check its structure
-        console.log("Fetched Activity Data:", activityData);
+        const activities = await dashboardStatsService.getActivityStats({
+          granularity: selectedPeriod,
+          startTime,
+          endTime,
+        });
 
-        const chartData = activityData.activities.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-US", {
+        console.log(`${selectedPeriod} Raw Activities:`, activities);
+
+        if (!activities || activities.length === 0) {
+          console.log(`No ${selectedPeriod} data available`);
+          setUsageData([]);
+          return;
+        }
+
+        const chartData = activities.map((item) => ({
+          date: new Date(item.timestamp).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
+            ...(selectedPeriod === "monthly" && { year: "numeric" }),
+            ...(selectedPeriod === "yearly" && { year: "numeric" }),
           }),
-          ai: item.ai_count || 0,
-          static: item.static_count || 0,
+          ai: item.usage.ai,
+          pattern: item.usage.pattern,
         }));
 
+        console.log(`${selectedPeriod} Processed Chart Data:`, chartData);
+
+        // Sort by date
+        chartData.sort((a, b) => new Date(a.date) - new Date(b.date));
         setUsageData(chartData);
       } catch (error) {
-        console.error("Error fetching activity data:", error);
+        console.error(`Error fetching ${selectedPeriod} data:`, error);
+        setError("Failed to fetch activity data");
       } finally {
         setLoading(false);
       }
@@ -201,7 +249,7 @@ export default function Dashboard() {
     fetchDashboardData();
   }, [selectedPeriod]);
 
-  // Add useEffect for fetching overview data
+  // useEffect for fetching overview data
   useEffect(() => {
     const fetchOverviewData = async () => {
       try {
@@ -209,43 +257,36 @@ export default function Dashboard() {
           overviewPeriod
         );
 
-        // Log the overview data to check its structure
-        console.log("Overview Data:", overviewData);
-
         // Update metrics with the overview data
         setMetrics([
           {
             label: "Total Pages",
-            value:
-              overviewData.find((item) => item.type === "TOTAL_PAGES")
-                ?.total_usage || 0,
-          },
-          {
-            label: "API Created",
-            value:
-              overviewData.find((item) => item.type === "API_CREATED")
-                ?.total_usage || 0,
+            value: overviewData.totalPages || 0,
           },
           {
             label: "Pattern Detection Parsing",
             value:
-              overviewData.find((item) => item.type === "PATTERN_MATCH")
-                ?.total_usage || 0,
+              overviewData.overviewData.find(
+                (item) => item.type === "PATTERN_MATCH"
+              )?.total_usage || 0,
           },
           {
             label: "3S AI Parsing",
             value:
-              overviewData.find((item) => item.type === "3S_AI")?.total_usage ||
-              0,
+              overviewData.overviewData.find((item) => item.type === "3S_AI")
+                ?.total_usage || 0,
           },
         ]);
+
+        setTotalPages(overviewData.totalPages || 0);
       } catch (error) {
         console.error("Error fetching overview data:", error);
+        setError("Failed to fetch overview data");
       }
     };
 
     fetchOverviewData();
-  }, [overviewPeriod]); // Re-fetch when period changes
+  }, [overviewPeriod]);
 
   return (
     <Layout>
@@ -289,72 +330,103 @@ export default function Dashboard() {
               onChange={(e) => setSelectedPeriod(e.target.value)}
               className="bg-gray-900 border border-gray-800 rounded-md px-3 py-2 text-gray-300 focus:outline-none focus:border-gray-700"
             >
-              <option value="day">Daily</option>
-              <option value="week">Weekly</option>
-              <option value="month">Monthly</option>
+              <option value="daily">Daily</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
             </select>
           </div>
           <div className="h-[400px] w-full bg-[#18181B] p-4 relative">
-            <div className="h-full flex items-end space-x-4">
-              {usageData.map((item, index) => {
-                const maxValue = Math.max(
-                  ...usageData.flatMap((d) => [d.ai, d.static])
-                );
-                const aiHeight = (item.ai / maxValue) * 100;
-                const staticHeight = (item.static / maxValue) * 100;
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400">Loading...</p>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-red-400">{error}</p>
+              </div>
+            ) : usageData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400">No data available</p>
+              </div>
+            ) : (
+              <div className="h-full flex items-end space-x-4">
+                {usageData.map((item, index) => {
+                  const maxValue = Math.max(
+                    ...usageData.flatMap((d) => [d.ai || 0, d.pattern || 0])
+                  );
 
-                return (
-                  <div
-                    key={index}
-                    className="flex-1 flex flex-col items-center justify-end"
-                  >
-                    <div className="w-full space-y-1">
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: `${aiHeight}%` }}
-                        transition={{ duration: 0.5 }}
-                        className="w-full bg-green-500 rounded-t-[4px] relative group cursor-pointer"
-                        style={{ minHeight: item.ai > 0 ? "20px" : "0px" }}
-                      >
-                        <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-[#9CA3AF]">
-                          {item.ai}
-                        </span>
-                      </motion.div>
+                  const aiHeight =
+                    maxValue > 0 ? ((item.ai || 0) / maxValue) * 100 : 0;
+                  const patternHeight =
+                    maxValue > 0 ? ((item.pattern || 0) / maxValue) * 100 : 0;
 
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: `${staticHeight}%` }}
-                        transition={{ duration: 0.5 }}
-                        className="w-full bg-[#10B981] rounded-t-[4px] relative group cursor-pointer"
-                        style={{ minHeight: item.static > 0 ? "20px" : "0px" }}
-                      >
-                        <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-[#9CA3AF]">
-                          {item.static}
-                        </span>
-                      </motion.div>
+                  return (
+                    <div
+                      key={index}
+                      className="flex-1 flex flex-col items-center justify-end"
+                    >
+                      <div className="w-full space-y-1">
+                        {/* AI Bar */}
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${aiHeight}%` }}
+                          transition={{ duration: 0.5 }}
+                          className="w-full relative bg-blue-500"
+                          style={{
+                            minHeight: item.ai > 0 ? "20px" : "0px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {item.ai > 0 && (
+                            <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
+                              {item.ai}
+                            </span>
+                          )}
+                        </motion.div>
+
+                        {/* Pattern Match Bar */}
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${patternHeight}%` }}
+                          transition={{ duration: 0.5 }}
+                          className="w-full relative bg-green-500"
+                          style={{
+                            minHeight: item.pattern > 0 ? "20px" : "0px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {item.pattern > 0 && (
+                            <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
+                              {item.pattern}
+                            </span>
+                          )}
+                        </motion.div>
+                      </div>
+                      <span className="mt-2 text-xs text-gray-400 whitespace-nowrap">
+                        {item.date}
+                      </span>
                     </div>
-                    <span className="mt-2 text-xs text-[#9CA3AF]">
-                      {item.date}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="border-t border-[#374151] opacity-10 w-full"
-                />
-              ))}
+          {/* Legend */}
+          <div className="flex justify-center mt-4 space-x-6">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-sm mr-2"></div>
+              <span className="text-sm text-gray-400">3S AI</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-sm mr-2"></div>
+              <span className="text-sm text-gray-400">Pattern Match</span>
             </div>
           </div>
         </div>
 
         {/* Document History */}
-        <div className="bg-zinc-900 rounded-lg overflow-hidden">
+        <div className="bg-zinc-900 rounded-lg overflow-hidden max-h-28">
           <div className="p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
               <h2 className="text-xl font-semibold text-white">
@@ -370,9 +442,7 @@ export default function Dashboard() {
               </motion.button>
             </div>
             <div className="flex items-center justify-center py-12">
-              <p className="text-xl text-gray-400 font-medium">
-                Coming Soon...
-              </p>
+              {/* Removed the Coming Soon message */}
             </div>
           </div>
         </div>

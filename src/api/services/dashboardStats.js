@@ -1,73 +1,72 @@
 import api from '../axios'
 
 export const dashboardStatsService = {
-  getActivityStats: async (period = 'daily') => {
-    const now = new Date()
-    let startDate = new Date()
+  getActivityStats: async ({ granularity = 'daily', startTime, endTime }) => {
+    try {
+      console.log('API Request Parameters:', {
+        granularity,
+        startTime,
+        endTime
+      });
 
-    switch (period) {
-      case 'day':
-        startDate.setDate(now.getDate() - 7)
-        break
-      case 'week':
-        startDate.setDate(now.getDate() - 30)
-        break
-      case 'month':
-        startDate.setMonth(now.getMonth() - 3)
-        break
-    }
+      const response = await api.get('/api/v1/usage/activity', {
+        params: {
+          granularity,
+          startTime,
+          endTime
+        }
+      });
 
-    const params = {
-      granularity: period === 'day' ? 'hourly' : period === 'week' ? 'daily' : 'monthly',
-      startTime: startDate.toISOString(),
-      endTime: now.toISOString()
-    }
+      console.log(`Raw ${granularity} Response:`, response.data);
 
-    const response = await api.get('/api/v1/usage/activity', { params });
+      // Transform the response data into the format needed for the chart
+      const activities = Object.entries(response.data).map(([date, data]) => ({
+        timestamp: data.timestamp,
+        usage: {
+          ai: data.usage['3S_AI'] || 0,
+          pattern: data.usage['PATTERN_MATCH'] || 0
+        }
+      }));
 
-    // Log the response from the API
-    console.log('Activity Stats Response:', response.data);
-
-    // Handle the actual response structure
-    const activities = Array.isArray(response.data) ? response.data :
-      response.data.activities ? response.data.activities :
-        [response.data]
-
-    return {
-      activities: activities.map(item => ({
-        date: item.timestamp || item.date,
-        ai_count: item.usage?.ai_processing_count || 0,
-        static_count: item.usage?.pattern_processing_count || 0
-      }))
+      console.log(`Processed ${granularity} Activities:`, activities);
+      return activities;
+    } catch (error) {
+      console.error('Error fetching activity data:', error);
+      throw error;
     }
   },
 
   getOverviewStats: async (period = 'weekly') => {
-    const now = new Date()
-    let startDate = new Date()
+    const now = new Date();
+    let startDate = new Date();
 
     switch (period) {
       case 'daily':
-        startDate.setDate(now.getDate() - 1)
-        break
+        startDate.setDate(now.getDate() - 1);
+        break;
       case 'weekly':
-        startDate.setDate(now.getDate() - 7)
-        break
+        startDate.setDate(now.getDate() - 7);
+        break;
       case 'monthly':
-        startDate.setMonth(now.getMonth() - 1)
-        break
+        startDate.setMonth(now.getMonth() - 1);
+        break;
     }
 
     const params = {
       startTime: startDate.toISOString(),
       endTime: now.toISOString()
-    }
+    };
 
     const response = await api.get('/api/v1/usage/overview', { params });
 
-    // Log the response from the API
-    console.log('Overview Stats Response:', response.data);
+    // Calculate total pages by summing up total_pages from each item
+    const totalPages = response.data.reduce((sum, item) => {
+      return sum + parseInt(item.total_pages || 0);
+    }, 0);
 
-    return response.data
+    return {
+      totalPages: totalPages,
+      overviewData: response.data
+    };
   }
-}
+};
