@@ -9,6 +9,8 @@ export default function OTPVerification() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const inputsRef = useRef([]);
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   // Handle input change for each OTP digit
   const handleChange = (e, index) => {
@@ -47,12 +49,12 @@ export default function OTPVerification() {
   // Handle paste event to allow pasting the OTP
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasteData = e.clipboardData.getData('Text').trim();
+    const pasteData = e.clipboardData.getData("Text").trim();
     if (!/^\d{6}$/.test(pasteData)) {
-      setError('Please paste a 6-digit OTP code.');
+      setError("Please paste a 6-digit OTP code.");
       return;
     }
-    const pasteOtp = pasteData.split('');
+    const pasteOtp = pasteData.split("");
     setOtp(pasteOtp);
     pasteOtp.forEach((digit, index) => {
       if (inputsRef.current[index]) {
@@ -71,121 +73,81 @@ export default function OTPVerification() {
     setError(null);
 
     try {
-      const email = localStorage.getItem('userEmail');
-      const otpString = otp.join('');
+      const email = localStorage.getItem("userEmail");
+      const otpString = otp.join("");
 
       const { data, error: verificationError } = await supabase.auth.verifyOtp({
         email,
         token: otpString,
-        type: 'signup'
+        type: "signup",
       });
 
       if (verificationError) {
-        setError('Invalid verification code. Please try again.');
+        setError("Invalid verification code. Please try again.");
         return;
       }
 
       if (data?.user) {
-        localStorage.removeItem('userEmail');
+        localStorage.removeItem("userEmail");
         navigate("/onboarding"); // Redirect to onboarding page
       }
     } catch (error) {
-      setError('Verification failed. Please try again.');
+      setError("Verification failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleResendCode = async () => {
+    setResendDisabled(true);
+    setError(null);
+
+    try {
+      const email = localStorage.getItem("userEmail");
+      const { error: resendError } = await supabase.auth.resend({
+        email,
+        type: "signup",
+      });
+
+      if (resendError) throw resendError;
+
+      // Start 60-second timer
+      setResendTimer(60);
+      const timer = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setResendDisabled(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error) {
+      setError("Failed to resend code. Please try again.");
+      setResendDisabled(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="hidden lg:flex lg:w-1/2 flex-col px-8">
-        <div className="flex items-center gap-2 mb-8 -ml-4 p-6 pl-16 mt-4">
+    <div className="flex min-h-screen bg-white pl-20 pr-20">
+      <div className="hidden lg:flex lg:w-1/2 flex-col ">
+        <div className="flex items-center gap-2 mb-4 pt-4 pl-12 mt-6">
           <img
             src={TideTransformLogo}
             alt="Tide Transform"
-            className="h-[45px] w-[200px]"
+            className="h-45px] w-[200px]"
           />
         </div>
 
-        <div className="flex-grow flex flex-col justify-center max-w-lg p-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent font-poppins">
-            See how it works
+        <div className="flex-grow flex flex-col justify-center px-16 pb-64">
+          <h1 className="text-[28px] font-bold mb-4 text-[#1C1C1C] ">
+            Verify Your Account
           </h1>
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">
-                  Smart Document Processing
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Transform maritime documents into structured data instantly
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Lightning Fast</h3>
-                <p className="text-gray-600 text-sm">
-                  Get results in seconds with our advanced AI engine
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#E9F1FF] flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Secure & Reliable</h3>
-                <p className="text-gray-600 text-sm">
-                  Your data is protected with enterprise-grade security
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-black text-base">
+            We've sent a verification code to your email. Please <br />
+            enter it below to complete your registration.
+          </p>
         </div>
       </div>
       <div className="lg:w-1/2 flex items-center justify-center">
@@ -207,7 +169,7 @@ export default function OTPVerification() {
                     value={digit}
                     onChange={(e) => handleChange(e, index)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
-                    ref={(el) => inputsRef.current[index] = el}
+                    ref={(el) => (inputsRef.current[index] = el)}
                     className="w-full h-14 text-center text-xl font-semibold border-b-2 border-gray-300 bg-transparent focus:border-blue-500 focus:outline-none"
                   />
                 </div>
@@ -222,16 +184,34 @@ export default function OTPVerification() {
               Verify Your Account
             </button>
 
+            <div className="mt-6 text-left">
+              <p className="text-gray-600 text-sm">
+                Didn't receive the code?{" "}
+                {resendTimer > 0 ? (
+                  <span className="text-gray-500">
+                    Resend in {resendTimer}s
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={resendDisabled}
+                    className="text-[#0066FF] font-medium hover:text-blue-700 disabled:text-gray-400"
+                  >
+                    Click to resend
+                  </button>
+                )}
+              </p>
+            </div>
+
             {error && (
               <div className="mt-4 text-red-600 text-sm text-center">
                 {error}
               </div>
             )}
-
           </form>
         </div>
       </div>
     </div>
   );
 }
-

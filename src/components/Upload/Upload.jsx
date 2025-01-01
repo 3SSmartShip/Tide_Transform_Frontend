@@ -626,18 +626,17 @@ export default function Upload() {
       exit={{ opacity: 0, y: -20 }}
       className="w-full"
     >
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-semibold text-white">
-            Upload Your Document
-          </h1>
-          <p className="text-gray-400 mt-1">
-            Go from Documents to Structured Data within seconds! Powered by 3S
-            AI
-          </p>
-        </div>
-        <div className="bg-[#1C2632] rounded-lg p-1 flex">
-          <button
+      <div className="flex flex-col">
+        <h1 className="text-2xl font-semibold text-white">
+          Upload Your Document
+        </h1>
+        <p className="text-gray-400 mt-1 pb-4">
+          Go from Documents to Structured Data within seconds! Powered by 3S AI
+        </p>
+      </div>
+
+      <div className="  mb-4 inline-flex bg-[#1C2632] rounded-lg p-1.5 ">
+      <button
             onClick={() => {
               setSelectedMode("invoice");
               setManualParsedData(null);
@@ -651,7 +650,7 @@ export default function Upload() {
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            Invoice/RFQ
+            Invoices/RFQs
           </button>
           <button
             onClick={() => {
@@ -669,7 +668,6 @@ export default function Upload() {
           >
             Manuals
           </button>
-        </div>
       </div>
 
       <div
@@ -793,26 +791,30 @@ export default function Upload() {
         )}
       </AnimatePresence>
 
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={
-          selectedMode === "invoice" ? handleInvoiceUpload : handleManualUpload
-        }
-        disabled={
-          (selectedMode === "invoice" ? invoiceFiles : manualFiles).length ===
-            0 || (selectedMode === "invoice" ? invoiceLoading : manualLoading)
-        }
-        className="mt-6 w-full bg-[#2563EB] text-white py-3 px-4 rounded-md font-medium disabled:opacity-50"
-      >
-        {selectedMode === "invoice"
-          ? invoiceLoading
+      <div className="flex justify-end">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={
+            selectedMode === "invoice"
+              ? handleInvoiceUpload
+              : handleManualUpload
+          }
+          disabled={
+            (selectedMode === "invoice" ? invoiceFiles : manualFiles).length ===
+              0 || (selectedMode === "invoice" ? invoiceLoading : manualLoading)
+          }
+          className="mt-6 w-full max-w-xs bg-[#2563EB] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 text-m"
+        >
+          {selectedMode === "invoice"
+            ? invoiceLoading
+              ? "Transforming..."
+              : "Transform Document"
+            : manualLoading
             ? "Transforming..."
-            : "Transform Document"
-          : manualLoading
-          ? "Processing..."
-          : "Process Manual"}
-      </motion.button>
+            : "Transform Manuals "}
+        </motion.button>
+      </div>
 
       {(invoiceLoading || manualLoading) && (
         <div className="flex flex-col items-center mt-4">
