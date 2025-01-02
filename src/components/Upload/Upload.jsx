@@ -406,6 +406,56 @@ const PDFPreview = ({ data }) => {
   );
 };
 
+// Add these animation variants at the top
+const loadingVariants = {
+  animate: {
+    scale: [1, 1.2, 1],
+    rotate: [0, 360],
+    borderRadius: ["20%", "50%", "20%"],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+const particleVariants = {
+  animate: (i) => ({
+    y: [0, -30, 0],
+    x: [0, i % 2 === 0 ? 20 : -20, 0],
+    opacity: [0, 1, 0],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      delay: i * 0.2,
+    },
+  }),
+};
+
+const successIconVariants = {
+  hidden: { scale: 0, rotate: -180 },
+  visible: {
+    scale: 1,
+    rotate: 0,
+    transition: {
+      type: "spring",
+      stiffness: 200,
+      damping: 10,
+    },
+  },
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
 export default function Upload() {
   const [invoiceFiles, setInvoiceFiles] = useState([]);
   const [manualFiles, setManualFiles] = useState([]);
@@ -421,6 +471,7 @@ export default function Upload() {
   const [manualSuccessMessage, setManualSuccessMessage] = useState("");
   const [pdfUrl, setPdfUrl] = useState(null);
   const [jobStatus, setJobStatus] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const handleInvoiceUpload = async () => {
     if (invoiceFiles.length === 0) {
@@ -620,12 +671,7 @@ export default function Upload() {
   };
 
   const UploadView = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="w-full"
-    >
+    <div className="w-full">
       <div className="flex flex-col">
         <h1 className="text-2xl font-semibold text-white">
           Upload Your Document
@@ -635,237 +681,397 @@ export default function Upload() {
         </p>
       </div>
 
-      <div className="  mb-4 inline-flex bg-[#1C2632] rounded-lg p-1.5 ">
-      <button
-            onClick={() => {
-              setSelectedMode("invoice");
-              setManualParsedData(null);
-              setManualSuccessMessage("");
-              setManualError(null);
-              setPdfUrl(null);
-            }}
-            className={`px-6 py-2 rounded-md transition-all ${
-              selectedMode === "invoice"
-                ? "bg-[#2563EB] text-white font-medium"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            Invoices/RFQs
-          </button>
-          <button
-            onClick={() => {
-              setSelectedMode("manual");
-              setInvoiceParsedData(null);
-              setInvoiceSuccessMessage("");
-              setInvoiceError(null);
-              setPdfUrl(null);
-            }}
-            className={`px-6 py-2 rounded-md transition-all ${
-              selectedMode === "manual"
-                ? "bg-[#2563EB] text-white font-medium"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            Manuals
-          </button>
-      </div>
-
-      <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center ${
-          (selectedMode === "invoice" ? invoiceFiles : manualFiles).length > 0
-            ? "border-green-500"
-            : "border-gray-700"
-        }`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-      >
-        <input
-          type="file"
-          onChange={handleFileChange}
-          className="hidden"
-          id="fileInput"
-          accept=".pdf,.doc,.docx,.txt"
-        />
-        <label htmlFor="fileInput" className="cursor-pointer">
-          <div className="bg-green-500 rounded-lg p-4 w-16 h-16 mx-auto mb-4">
-            <UploadIcon className="h-8 w-8 text-black" />
-          </div>
-          <p className="text-gray-400">Click to upload or drag and drop</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Supported formats: PDF, DOC, DOCX, TXT
-          </p>
-        </label>
-      </div>
-
-      {selectedMode === "invoice" && invoiceFiles.length > 0 && (
-        <div className="mt-4">
-          {invoiceFiles.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between bg-gray-800 p-3 rounded-md"
-            >
-              <span className="text-gray-300">{file.name}</span>
-              <button
-                onClick={() => removeFile(index)}
-                className="text-gray-400 hover:text-red-500"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {selectedMode === "manual" && manualFiles.length > 0 && (
-        <div className="mt-4">
-          {manualFiles.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between bg-gray-800 p-3 rounded-md"
-            >
-              <span className="text-gray-300">{file.name}</span>
-              <button
-                onClick={() => removeFile(index)}
-                className="text-gray-400 hover:text-red-500"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <AnimatePresence>
-        {selectedMode === "invoice" && invoiceError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md"
-          >
-            <pre className="text-red-400 whitespace-pre-wrap">
-              {invoiceError}
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selectedMode === "manual" && manualError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md"
-          >
-            <pre className="text-red-400 whitespace-pre-wrap">
-              {manualError}
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selectedMode === "invoice" && invoiceSuccessMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md"
-          >
-            <p className="text-green-400">{invoiceSuccessMessage}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selectedMode === "manual" && manualSuccessMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md"
-          >
-            <p className="text-green-400">{manualSuccessMessage}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex justify-end">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={
+      <div className="mb-4 inline-flex bg-[#1C2632] rounded-lg p-1.5">
+        <button
+          onClick={() => {
+            setSelectedMode("invoice");
+            setManualParsedData(null);
+            setManualSuccessMessage("");
+            setManualError(null);
+            setPdfUrl(null);
+          }}
+          className={`px-6 py-2 rounded-md transition-colors ${
             selectedMode === "invoice"
-              ? handleInvoiceUpload
-              : handleManualUpload
-          }
-          disabled={
-            (selectedMode === "invoice" ? invoiceFiles : manualFiles).length ===
-              0 || (selectedMode === "invoice" ? invoiceLoading : manualLoading)
-          }
-          className="mt-6 w-full max-w-xs bg-[#2563EB] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 text-m"
+              ? "bg-[#2563EB] text-white font-medium"
+              : "text-gray-400 hover:text-white"
+          }`}
         >
-          {selectedMode === "invoice"
-            ? invoiceLoading
-              ? "Transforming..."
-              : "Transform Document"
-            : manualLoading
-            ? "Transforming..."
-            : "Transform Manuals "}
-        </motion.button>
+          Invoices/RFQs
+        </button>
+        <button
+          onClick={() => {
+            setSelectedMode("manual");
+            setInvoiceParsedData(null);
+            setInvoiceSuccessMessage("");
+            setInvoiceError(null);
+            setPdfUrl(null);
+          }}
+          className={`px-6 py-2 rounded-md transition-colors ${
+            selectedMode === "manual"
+              ? "bg-[#2563EB] text-white font-medium"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Manuals
+        </button>
       </div>
 
-      {(invoiceLoading || manualLoading) && (
-        <div className="flex flex-col items-center mt-4">
-          <div className="loader"></div>
-          {jobStatus && <p className="text-gray-400 mt-2">{jobStatus}</p>}
-        </div>
-      )}
-
-      {(getCurrentData() || invoiceError || manualError) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 bg-gray-900 rounded-lg p-6 relative"
+      <div className="w-full">
+        <div
+          className={`border-2 border-dashed rounded-lg p-8 text-center ${
+            (selectedMode === "invoice" ? invoiceFiles : manualFiles).length > 0
+              ? "border-green-500"
+              : "border-gray-700"
+          }`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
         >
-          {!invoiceError && !manualError && (
-            <PDFPreview data={getCurrentData()} />
+          <input
+            type="file"
+            onChange={handleFileChange}
+            className="hidden"
+            id="fileInput"
+            accept=".pdf,.doc,.docx,.txt"
+          />
+          <label htmlFor="fileInput" className="cursor-pointer">
+            <div className="bg-green-500 rounded-lg p-4 w-16 h-16 mx-auto mb-4">
+              <UploadIcon className="h-8 w-8 text-black" />
+            </div>
+            <p className="text-gray-400">Click to upload or drag and drop</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Supported formats: PDF, DOC, DOCX, TXT
+            </p>
+          </label>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {selectedMode === "invoice" && invoiceFiles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4"
+            >
+              {invoiceFiles.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-800 p-3 rounded-md"
+                >
+                  <span className="text-gray-300">{file.name}</span>
+                  <button
+                    onClick={() => removeFile(index)}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              ))}
+            </motion.div>
           )}
-          <div className="mt-4">
-            <h2 className="text-xl font-semibold text-white">JSON Response</h2>
-            {invoiceError &&
-            getCurrentData()?.error?.status === 400 &&
-            getCurrentData()?.error?.message ===
-              "Given document is not valid invoice or RFQ" ? (
-              <div>
-                <div className="mb-4">
-                  <span className="text-gray-400">Type: </span>
-                  <span className="text-red-400">Error</span>
+
+          {selectedMode === "manual" && manualFiles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4"
+            >
+              {manualFiles.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-800 p-3 rounded-md"
+                >
+                  <span className="text-gray-300">{file.name}</span>
+                  <button
+                    onClick={() => removeFile(index)}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-                <div className="mb-4">
-                  <span className="text-gray-400">Status: </span>
-                  <span className="text-yellow-400">400</span>
-                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence mode="wait">
+          {selectedMode === "invoice" && invoiceError && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md"
+            >
+              <pre className="text-red-400 whitespace-pre-wrap">
+                {invoiceError}
+              </pre>
+            </motion.div>
+          )}
+
+          {selectedMode === "manual" && manualError && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md"
+            >
+              <pre className="text-red-400 whitespace-pre-wrap">
+                {manualError}
+              </pre>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence mode="wait">
+          {selectedMode === "invoice" && invoiceSuccessMessage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md"
+            >
+              <p className="text-green-400">{invoiceSuccessMessage}</p>
+            </motion.div>
+          )}
+
+          {selectedMode === "manual" && manualSuccessMessage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md"
+            >
+              <p className="text-green-400">{manualSuccessMessage}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex justify-end">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={
+              selectedMode === "invoice"
+                ? handleInvoiceUpload
+                : handleManualUpload
+            }
+            disabled={
+              (selectedMode === "invoice" ? invoiceFiles : manualFiles)
+                .length === 0 ||
+              (selectedMode === "invoice" ? invoiceLoading : manualLoading)
+            }
+            className="mt-6 w-full max-w-xs bg-[#2563EB] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 text-m"
+          >
+            {selectedMode === "invoice"
+              ? invoiceLoading
+                ? "Transforming..."
+                : "Transform Document"
+              : manualLoading
+              ? "Transforming..."
+              : "Transform Manuals "}
+          </motion.button>
+        </div>
+
+        {(invoiceLoading || manualLoading) && (
+          <motion.div
+            className="relative flex flex-col items-center mt-8 mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {/* Particle effects */}
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-3 h-3 bg-blue-500 rounded-full"
+                custom={i}
+                variants={particleVariants}
+                animate="animate"
+                style={{
+                  left: "50%",
+                  top: "50%",
+                }}
+              />
+            ))}
+
+            <motion.div
+              className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500"
+              variants={loadingVariants}
+              animate="animate"
+            />
+
+            {jobStatus && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-center mt-6"
+              >
+                <motion.p
+                  className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {jobStatus}
+                </motion.p>
+                <p className="text-gray-500 mt-2">
+                  Processing your document with AI magic ✨
+                </p>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+
+        <AnimatePresence mode="wait">
+          {(getCurrentData() || invoiceError || manualError) && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                  type: "spring",
+                  damping: 20,
+                  stiffness: 100,
+                },
+              }}
+              exit={{ opacity: 0, y: -50, scale: 0.9 }}
+              className="mt-8 bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 relative overflow-hidden shadow-xl"
+            >
+              {/* Add animated background effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"
+                animate={{
+                  backgroundPosition: ["0% 0%", "100% 100%"],
+                }}
+                transition={{
+                  duration: 15,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                }}
+              />
+
+              {/* Content with enhanced animations */}
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="relative z-10"
+              >
+                {/* Your existing content with added motion effects */}
+                {!invoiceError && !manualError && (
+                  <motion.div
+                    initial={{ x: -30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="border-b border-gray-700 pb-6"
+                  >
+                    <PDFPreview data={getCurrentData()} />
+                  </motion.div>
+                )}
+
+                {/* Rest of your content with similar enhanced animations */}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence mode="wait">
+          {getCurrentData() && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mt-6 rounded-lg overflow-hidden"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="bg-[#272822] p-4 rounded-t-lg flex items-center justify-between"
+              >
+                <motion.h3
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  className="text-white font-medium"
+                >
+                  JSON Output
+                </motion.h3>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      JSON.stringify(getCurrentData(), null, 2)
+                    );
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  {copied ? (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="text-green-400 flex items-center gap-1"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Copied!
+                    </motion.span>
+                  ) : (
+                    "Copy JSON"
+                  )}
+                </motion.button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="max-h-[500px] overflow-auto"
+              >
                 <ReactJson
-                  src={getCurrentData().error}
+                  src={getCurrentData()}
                   theme="monokai"
-                  collapsed={false}
                   displayDataTypes={false}
                   displayObjectSize={false}
+                  enableClipboard={false}
+                  style={{
+                    background: "#272822",
+                    padding: "1rem",
+                    borderRadius: "0 0 0.5rem 0.5rem",
+                  }}
+                  iconStyle="square"
+                  collapsed={false}
+                  name={false}
+                  shouldCollapse={false}
                 />
-              </div>
-            ) : (
-              <ReactJson
-                src={getCurrentData() || {}}
-                theme="monokai"
-                collapsed={false}
-              />
-            )}
-          </div>
-        </motion.div>
-      )}
-    </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 
   return (

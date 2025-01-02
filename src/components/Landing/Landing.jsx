@@ -38,6 +38,11 @@ export default function Landing() {
   const [successMessage, setSuccessMessage] = useState("");
   const [hasInvoiceParsed, setHasInvoiceParsed] = useState(false);
   const [hasManualParsed, setHasManualParsed] = useState(false);
+  const [jobId, setJobId] = useState(null);
+  const [processingStatus, setProcessingStatus] = useState(null);
+  const [consoleOutput, setConsoleOutput] = useState(null);
+  const [responseData, setResponseData] = useState(null);
+  const [hasDemoUsed, setHasDemoUsed] = useState(false);
   const apiUrl = "YOUR_API_ENDPOINT";
 
   const featuresRef = useRef(null);
@@ -49,6 +54,80 @@ export default function Landing() {
       setHasManualParsed(true);
     }
   }, []);
+
+  useEffect(() => {
+    let intervalId;
+
+    if (jobId) {
+      intervalId = setInterval(async () => {
+        try {
+          const status = await demoService.getDemoStatus(jobId);
+          setProcessingStatus(status.status);
+          console.log("Processing status:", status);
+
+          if (status.status === "completed") {
+            setParsedData(status.result);
+            setSuccessMessage(
+              `${
+                selectedType.charAt(0).toUpperCase() + selectedType.slice(1)
+              } processed successfully!`
+            );
+            clearInterval(intervalId);
+            setLoading(false);
+
+            if (selectedType === "manuals") {
+              setHasManualParsed(true);
+              localStorage.setItem("manualParsed", "true");
+            } else {
+              setHasInvoiceParsed(true);
+            }
+          } else if (status.status === "failed") {
+            setError("Processing failed. Please try again.");
+            clearInterval(intervalId);
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error("Status check failed:", error);
+          setError(
+            error.response?.data?.message || "Failed to check processing status"
+          );
+          clearInterval(intervalId);
+          setLoading(false);
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [jobId, selectedType]);
+
+  useEffect(() => {
+    const originalConsoleLog = console.log;
+    console.log = (...args) => {
+      originalConsoleLog.apply(console, args);
+      setConsoleOutput(args);
+    };
+
+    return () => {
+      console.log = originalConsoleLog;
+    };
+  }, []);
+
+  useEffect(() => {
+    const demoUsed = localStorage.getItem("demoUsed");
+    if (demoUsed === "true") {
+      setHasDemoUsed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hasDemoUsed) {
+      localStorage.setItem("demoUsed", "true");
+    }
+  }, [hasDemoUsed]);
 
   const scrollToSection = (ref) => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
@@ -105,41 +184,32 @@ export default function Landing() {
   const handleTransformDocument = async () => {
     if (!selectedFile) return;
 
-    if (selectedType === "manuals" && hasManualParsed) {
-      setError(
-        "You have already parsed a manual. Please refresh the page to start over."
-      );
-      return;
-    }
-
     const formData = new FormData();
     formData.append("file", selectedFile);
 
     try {
       setLoading(true);
-      let result;
-      if (selectedType === "invoice") {
-        result = await demoService.transformDocument(formData);
-        setHasInvoiceParsed(true);
-      } else {
-        result = await demoService.uploadManual(formData);
-        setHasManualParsed(true);
-        localStorage.setItem("manualParsed", "true");
+      setJobId(null);
+      setParsedData(null);
+      setError(null);
+      setProcessingStatus(null);
+      setConsoleOutput(null);
+
+      let response;
+      response = await demoService.transformDocument(formData, selectedType);
+
+      if (response.jobId) {
+        setJobId(response.jobId);
+        setSelectedFile(null);
+        setDocumentUploaded(false);
+        setProcessingStatus("processing");
       }
-      setParsedData(result);
-      setSuccessMessage(
-        `${
-          selectedType.charAt(0).toUpperCase() + selectedType.slice(1)
-        } processed successfully!`
-      );
-      setSelectedFile(null);
-      setDocumentUploaded(false);
     } catch (error) {
-      console.error(`Error processing ${selectedType}:`, error);
-      setError(
-        `Demo Limit for ${selectedType}. Please register to use this feature.`
-      );
-    } finally {
+      if (error.response?.status === 429) {
+        setError("Rate limit exceeded. Please try again later.");
+      } else {
+        setError(error.response?.data?.message || "Failed to process document");
+      }
       setLoading(false);
     }
   };
@@ -152,9 +222,70 @@ export default function Landing() {
   });
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(parsedData, null, 2));
+    navigator.clipboard.writeText(JSON.stringify(responseData, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleFileUpload = async (file) => {
+    try {
+      if (hasDemoUsed) {
+        setError("limit_reached");
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      setResponseData(null);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const uploadResponse = await demoService.transformDocument(
+          formData,
+          selectedType
+        );
+        const newJobId = uploadResponse.jobId;
+        setJobId(newJobId);
+
+        const checkStatus = async () => {
+          try {
+            const statusResponse = await demoService.getDemoStatus(newJobId);
+            setProcessingStatus(statusResponse.status);
+
+            if (statusResponse.status === "completed") {
+              setResponseData(statusResponse.result);
+              setLoading(false);
+              setHasDemoUsed(true);
+              return true;
+            } else if (statusResponse.status === "failed") {
+              setError("limit_reached");
+              setLoading(false);
+              return true;
+            }
+            return false;
+          } catch (error) {
+            setError("limit_reached");
+            setLoading(false);
+            return true;
+          }
+        };
+
+        const pollInterval = setInterval(async () => {
+          const isDone = await checkStatus();
+          if (isDone) {
+            clearInterval(pollInterval);
+          }
+        }, 2000);
+      } catch (error) {
+        setError("limit_reached");
+        setLoading(false);
+      }
+    } catch (error) {
+      setError("limit_reached");
+      setLoading(false);
+    }
   };
 
   return (
@@ -436,17 +567,20 @@ export default function Landing() {
               Document Processing Demo
             </h2>
 
-            {(selectedType === "manuals" && hasManualParsed) ||
-            (selectedType === "invoice" && hasInvoiceParsed) ? (
-              <div className="border-2 border-yellow-400 bg-yellow-50 rounded-lg p-4 mb-4">
-                <div className="flex items-center">
-                  <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
-                  <p className="text-yellow-700">
-                    You have already parsed a {selectedType}. Please refresh the
-                    page to start over.
+            {(selectedType === "manuals" && hasDemoUsed) ||
+            (selectedType === "invoice" && hasDemoUsed) ? (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-black rounded-lg p-4 mb-4"
+              >
+                <div className="flex items-center justify-center">
+                  <p className="text-white text-sm">
+                    {error.response?.data?.message || error.message}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ) : (
               /* Upload Zone */
               <div
@@ -474,11 +608,19 @@ export default function Landing() {
                   <Upload className="w-5 h-5 text-gray-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{selectedFile.name}</p>
+                  <p className="text-sm font-medium">
+                    {selectedFile.name.split("\\").pop().split("/").pop()}
+                  </p>
                   <p className="text-xs text-gray-500">
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
               </div>
             )}
 
@@ -515,54 +657,76 @@ export default function Landing() {
             </AnimatePresence>
 
             {/* Error Message */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg"
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    type: "spring",
+                    stiffness: 100,
+                    damping: 10,
+                  },
+                }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mt-4 text-center"
+              >
+                <motion.p
+                  className="text-Black text-m font-medium"
+                  animate={{
+                    scale: [1, 1.02, 1],
+                    transition: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    },
+                  }}
                 >
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  You have reached the limit of demo trial. Please upgrade your
+                  plan
+                </motion.p>
+              </motion.div>
+            )}
 
             {/* JSON Result */}
-            {parsedData && (
+            {responseData && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 rounded-lg overflow-hidden"
               >
-                <div className="bg-[#1E1E1E] rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
-                    <span className="text-gray-400 text-sm">Json File</span>
-                    <motion.button
-                      onClick={handleCopy}
-                      className="text-gray-400 hover:text-white text-sm flex items-center gap-2"
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {copied ? (
-                        <motion.span
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          Copied!
-                        </motion.span>
-                      ) : (
-                        "Copy code"
-                      )}
-                    </motion.button>
-                  </div>
-                  <div className="p-4 overflow-x-auto">
-                    <pre className="text-sm">
-                      <code className="text-gray-300">
-                        {JSON.stringify(parsedData, null, 2)}
-                      </code>
-                    </pre>
-                  </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-[#272822] p-4 rounded-t-lg flex items-center justify-between"
+                >
+                  <h3 className="text-white font-medium">Response Data</h3>
+                  <button
+                    onClick={handleCopy}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </motion.div>
+                <div className="max-h-[500px] overflow-auto">
+                  <ReactJson
+                    src={responseData}
+                    theme="monokai"
+                    displayDataTypes={false}
+                    displayObjectSize={false}
+                    enableClipboard={false}
+                    style={{
+                      background: "#272822",
+                      padding: "1rem",
+                      borderRadius: "0 0 0.5rem 0.5rem",
+                    }}
+                    iconStyle="square"
+                    collapsed={false}
+                    name={false}
+                    shouldCollapse={false}
+                  />
                 </div>
               </motion.div>
             )}
@@ -645,6 +809,32 @@ export default function Landing() {
 
       {/* Footer Component */}
       <Footer />
+
+      {/* Loading Message */}
+      {loading && (
+        <div className="mt-4 text-center">
+          <p>Processing... {processingStatus && `(${processingStatus})`}</p>
+        </div>
+      )}
+
+      {/* Add a section to show processing status */}
+      {loading && processingStatus && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 bg-gray-100 rounded-lg"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full animate-pulse bg-blue-500"></div>
+            <p className="text-gray-700">
+              Status: <span className="font-medium">{processingStatus}</span>
+            </p>
+          </div>
+          {jobId && (
+            <p className="text-sm text-gray-500 mt-2">Job ID: {jobId}</p>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }

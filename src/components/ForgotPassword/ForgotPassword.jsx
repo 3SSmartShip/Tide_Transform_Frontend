@@ -113,7 +113,9 @@ export default function ForgotPassword() {
       setNewPassword("");
       setConfirmPassword("");
 
-      navigate("/login");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (error) {
       setError("Failed to change password. Please try again.");
     } finally {
@@ -485,22 +487,7 @@ export default function ForgotPassword() {
                       Must be at least 8 characters
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-sm text-gray-600">
-                      Must contain one special character
-                    </span>
-                  </div>
+                 
                 </div>
 
                 <button
@@ -521,36 +508,60 @@ export default function ForgotPassword() {
           )}
           {successMessage && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mt-4 text-center"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 15,
+                },
+              }}
+              className="mt-4 flex flex-col items-center justify-center gap-3"
             >
-              <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-800">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{
+                  scale: [0, 1.2, 1],
+                  rotate: [0, 45, 0],
+                }}
+                transition={{
+                  duration: 0.5,
+                  times: [0, 0.6, 1],
+                }}
+                className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center"
+              >
                 <svg
-                  className="mr-2 h-5 w-5 text-green-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
+                  <motion.path
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
                   />
                 </svg>
-                {successMessage}
-              </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-center"
+              >
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                  Password Changed Successfully!
+                </h3>
+                <p className="text-gray-600">Redirecting to login page...</p>
+              </motion.div>
             </motion.div>
           )}
-
-          {/* <div className="mt-6 text-left text-sm">
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Back to login
-            </Link>
-          </div> */}
         </div>
       </div>
     </div>
