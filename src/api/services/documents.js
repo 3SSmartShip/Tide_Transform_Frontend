@@ -72,7 +72,7 @@ export const documentsApi = {
       // Step 1: Upload and get job ID
       onStatusUpdate?.('Uploading manual...');
       const uploadResponse = await api.post('/api/v1/transform/manual', formData);
-      console.log('Upload manual response:', uploadResponse.data);
+      // console.log('Upload manual response:', uploadResponse.data);
 
       if (!uploadResponse.data?.jobId) {
         throw new Error('No job ID received');
@@ -81,7 +81,7 @@ export const documentsApi = {
       // Step 2: Poll for results
       onStatusUpdate?.('Processing started...');
       const result = await this.pollStatus(uploadResponse.data.jobId, onStatusUpdate);
-      console.log('Final manual result:', result);
+      // console.log('Final manual result:', result);
       return result;
     } catch (error) {
       console.error('Manual processing error:', error);

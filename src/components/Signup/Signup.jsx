@@ -60,49 +60,27 @@ export default function SignUp() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
-  
+
     try {
-      // Step 1: Initiate Google Sign-In
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           queryParams: {
             access_type: "offline",
-            prompt: "select_account",
+            prompt: "consent",
           },
+          redirectTo: `${import.meta.env.VITE_APP_URL}/onboarding`,
         },
       });
-  
+
       if (error) throw error;
-  
-      // Step 2: Check if the user is authenticated
-      const user = data?.user;
-      if (user) {
-        // Step 3: Check if the user's profile exists in the "profiles" table
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-  
-        if (profileError && profileError.code === "PGRST116") {
-          // Redirect new user to onboarding if no profile found
-          navigate("/onboarding");
-        } else if (profile) {
-          // Redirect existing user to dashboard
-          navigate("/dashboard");
-        } else {
-          throw new Error("Unexpected error while fetching user profile.");
-        }
-      }
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
       setError("Unable to sign in with Google. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="flex min-h-screen pl-20 pr-20">
       {/* Left side */}

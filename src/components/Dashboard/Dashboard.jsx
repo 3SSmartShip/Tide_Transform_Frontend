@@ -184,6 +184,8 @@ export default function Dashboard() {
         .sort((a, b) => new Date(a.date) - new Date(b.date))
         .map((item) => ({
           ...item,
+          ai: item.ai || 0,
+          pattern: item.pattern || 0,
           date: new Date(item.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -222,21 +224,31 @@ export default function Dashboard() {
           return;
         }
 
-        const chartData = activities.map((item) => ({
-          date: new Date(item.timestamp).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            ...(selectedPeriod === "monthly" && { year: "numeric" }),
-            ...(selectedPeriod === "yearly" && { year: "numeric" }),
-          }),
-          ai: item.usage.ai,
-          pattern: item.usage.pattern,
-        }));
+        const chartData = activities.map((item) => {
+          // Convert UTC timestamp to local date
+          const date = new Date(item.timestamp);
+          // Adjust for local timezone
+          const localDate = new Date(
+            date.getTime() - date.getTimezoneOffset() * 60000
+          );
+
+          return {
+            timestamp: localDate.toISOString(), // Store ISO string for sorting
+            date: localDate.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              ...(selectedPeriod === "monthly" && { year: "numeric" }),
+              ...(selectedPeriod === "yearly" && { year: "numeric" }),
+            }),
+            ai: item.usage.ai,
+            pattern: item.usage.pattern,
+          };
+        });
 
         console.log(`${selectedPeriod} Processed Chart Data:`, chartData);
 
-        // Sort by date
-        chartData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        // Sort by timestamp to ensure correct ordering
+        chartData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         setUsageData(chartData);
       } catch (error) {
         console.error(`Error fetching ${selectedPeriod} data:`, error);
@@ -306,18 +318,56 @@ export default function Dashboard() {
             </select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {metrics.map((metric) => (
-              <motion.div
-                key={metric.label}
-                whileHover={{ scale: 1.02 }}
-                className="bg-[#1C2632] p-6 rounded-lg"
-              >
-                <h3 className="text-gray-400 text-sm">{metric.label}</h3>
-                <p className="mt-2 text-3xl font-semibold text-white">
-                  {metric.value.toLocaleString()}
-                </p>
-              </motion.div>
-            ))}
+            {loading ? (
+              // Loading skeleton animations
+              <>
+                {[1, 2, 3].map((index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0.5 }}
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="bg-[#1C2632] p-6 rounded-lg"
+                  >
+                    <div className="h-4 w-24 bg-gray-700 rounded animate-pulse mb-2"></div>
+                    <div className="h-8 w-32 bg-gray-700 rounded animate-pulse"></div>
+                  </motion.div>
+                ))}
+              </>
+            ) : (
+              // Actual metrics
+              metrics.map((metric) => (
+                <motion.div
+                  key={metric.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="bg-[#1C2632] p-6 rounded-lg"
+                >
+                  <motion.h3
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-gray-400 text-sm"
+                  >
+                    {metric.label}
+                  </motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="mt-2 text-3xl font-semibold text-white"
+                  >
+                    {metric.value.toLocaleString()}
+                  </motion.p>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
 
@@ -337,8 +387,59 @@ export default function Dashboard() {
           </div>
           <div className="h-[400px] w-full bg-[#18181B] p-4 relative">
             {loading ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-400">Loading...</p>
+              <div className="h-full flex items-end justify-between px-8">
+                {[1, 2, 3, 4, 5, 6, 7].map((index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col items-center justify-end"
+                    style={{ width: "60px" }}
+                  >
+                    <div className="w-full flex space-x-1 justify-center h-[250px] items-end">
+                      {/* AI Bar Loading Animation */}
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{
+                          height: ["20px", "180px", "20px"],
+                          opacity: [0.3, 0.7, 0.3],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: index * 0.1,
+                        }}
+                        className="w-8 relative bg-blue-500/30 rounded-md"
+                      />
+
+                      {/* Pattern Match Bar Loading Animation */}
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{
+                          height: ["20px", "100px", "20px"],
+                          opacity: [0.3, 0.7, 0.3],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: index * 0.1,
+                        }}
+                        className="w-8 relative bg-green-500/30 rounded-md"
+                      />
+                    </div>
+                    {/* Date Loading Animation */}
+                    <motion.div
+                      initial={{ opacity: 0.3 }}
+                      animate={{ opacity: [0.3, 0.7, 0.3] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="mt-4 h-4 w-16 bg-gray-700 rounded"
+                    />
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="flex items-center justify-center h-full">
@@ -349,60 +450,68 @@ export default function Dashboard() {
                 <p className="text-gray-400">No data available</p>
               </div>
             ) : (
-              <div className="h-full flex items-end space-x-4">
+              <div className="h-full flex items-end justify-between px-8">
                 {usageData.map((item, index) => {
-                  const maxValue = Math.max(
-                    ...usageData.flatMap((d) => [d.ai || 0, d.pattern || 0])
+                  const maxAiValue = Math.max(
+                    ...usageData.map((d) => d.ai || 0)
+                  );
+                  const maxPatternValue = Math.max(
+                    ...usageData.map((d) => d.pattern || 0)
                   );
 
                   const aiHeight =
-                    maxValue > 0 ? ((item.ai || 0) / maxValue) * 100 : 0;
+                    item.ai === 0 ? 20 : ((item.ai || 0) / maxAiValue) * 200;
                   const patternHeight =
-                    maxValue > 0 ? ((item.pattern || 0) / maxValue) * 100 : 0;
+                    item.pattern === 0
+                      ? 20
+                      : ((item.pattern || 0) / maxPatternValue) * 200;
 
                   return (
                     <div
                       key={index}
-                      className="flex-1 flex flex-col items-center justify-end"
+                      className="flex flex-col items-center justify-end"
+                      style={{ width: "60px" }}
                     >
-                      <div className="w-full space-y-1">
+                      <div className="w-full flex space-x-1 justify-center h-[250px] items-end">
                         {/* AI Bar */}
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${aiHeight}%` }}
-                          transition={{ duration: 0.5 }}
-                          className="w-full relative bg-blue-500"
-                          style={{
-                            minHeight: item.ai > 0 ? "20px" : "0px",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          {item.ai > 0 && (
+                        <div className="relative">
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${aiHeight}px` }}
+                            transition={{ duration: 0.5 }}
+                            className="w-8 relative bg-blue-500"
+                            style={{
+                              height: `${aiHeight}px`,
+                              borderRadius: "4px",
+                              opacity: item.ai === 0 ? 0.3 : 1,
+                            }}
+                          >
                             <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
                               {item.ai}
                             </span>
-                          )}
-                        </motion.div>
+                          </motion.div>
+                        </div>
 
                         {/* Pattern Match Bar */}
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${patternHeight}%` }}
-                          transition={{ duration: 0.5 }}
-                          className="w-full relative bg-green-500"
-                          style={{
-                            minHeight: item.pattern > 0 ? "20px" : "0px",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          {item.pattern > 0 && (
+                        <div className="relative">
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${patternHeight}px` }}
+                            transition={{ duration: 0.5 }}
+                            className="w-8 relative bg-green-500"
+                            style={{
+                              height: `${patternHeight}px`,
+                              borderRadius: "4px",
+                              opacity: item.pattern === 0 ? 0.3 : 1,
+                            }}
+                          >
                             <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
                               {item.pattern}
                             </span>
-                          )}
-                        </motion.div>
+                          </motion.div>
+                        </div>
                       </div>
-                      <span className="mt-2 text-xs text-gray-400 whitespace-nowrap">
+                      <span className="mt-4 text-xs text-gray-400 whitespace-nowrap">
                         {item.date}
                       </span>
                     </div>
