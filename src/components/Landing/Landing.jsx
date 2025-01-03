@@ -42,7 +42,11 @@ export default function Landing() {
   const [processingStatus, setProcessingStatus] = useState(null);
   const [consoleOutput, setConsoleOutput] = useState(null);
   const [responseData, setResponseData] = useState(null);
-  const [hasDemoUsed, setHasDemoUsed] = useState(false);
+  const [hasDemoUsed, setHasDemoUsed] = useState(() => {
+    const invoiceUsed = localStorage.getItem("invoiceDemoUsed") === "true";
+    const manualUsed = localStorage.getItem("manualDemoUsed") === "true";
+    return { invoice: invoiceUsed, manual: manualUsed };
+  });
   const apiUrl = "YOUR_API_ENDPOINT";
 
   const featuresRef = useRef(null);
@@ -165,8 +169,7 @@ export default function Landing() {
     setParsedData(null);
     setError(null);
     setSuccessMessage("");
-    setHasInvoiceParsed(false);
-    setHasManualParsed(false);
+    setResponseData(null);
   };
 
   const handleNavigation = (section) => {
@@ -229,8 +232,10 @@ export default function Landing() {
 
   const handleFileUpload = async (file) => {
     try {
-      if (hasDemoUsed) {
-        setError("limit_reached");
+      if (hasDemoUsed[selectedType === "invoice" ? "invoice" : "manual"]) {
+        setError(
+          "You have reached the limit of demo trial. Please upgrade your plan"
+        );
         return;
       }
 
@@ -256,17 +261,31 @@ export default function Landing() {
 
             if (statusResponse.status === "completed") {
               setResponseData(statusResponse.result);
+              const newDemoUsed = { ...hasDemoUsed };
+              newDemoUsed[
+                selectedType === "invoice" ? "invoice" : "manual"
+              ] = true;
+              setHasDemoUsed(newDemoUsed);
+              localStorage.setItem(
+                selectedType === "invoice"
+                  ? "invoiceDemoUsed"
+                  : "manualDemoUsed",
+                "true"
+              );
               setLoading(false);
-              setHasDemoUsed(true);
               return true;
             } else if (statusResponse.status === "failed") {
-              setError("limit_reached");
+              setError(statusResponse.message || "Processing failed");
               setLoading(false);
               return true;
             }
             return false;
           } catch (error) {
-            setError("limit_reached");
+            setError(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Error checking status"
+            );
             setLoading(false);
             return true;
           }
@@ -279,11 +298,13 @@ export default function Landing() {
           }
         }, 2000);
       } catch (error) {
-        setError("limit_reached");
+        setError(
+          error?.response?.data?.message || "Failed to process document"
+        );
         setLoading(false);
       }
     } catch (error) {
-      setError("limit_reached");
+      setError("Upload failed");
       setLoading(false);
     }
   };
@@ -567,19 +588,36 @@ export default function Landing() {
               Document Processing Demo
             </h2>
 
-            {(selectedType === "manuals" && hasDemoUsed) ||
-            (selectedType === "invoice" && hasDemoUsed) ? (
+            {(selectedType === "invoice" && hasDemoUsed.invoice) ||
+            (selectedType === "manuals" && hasDemoUsed.manual) ? (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="bg-black rounded-lg p-4 mb-4"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    type: "spring",
+                    stiffness: 100,
+                    damping: 10,
+                  },
+                }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mt-4 text-center"
               >
-                <div className="flex items-center justify-center">
-                  <p className="text-white text-sm">
-                    {error.response?.data?.message || error.message}
-                  </p>
-                </div>
+                <motion.p
+                  className="text-[#5583F7] text-sm font-medium"
+                  animate={{
+                    scale: [1, 1.02, 1],
+                    transition: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    },
+                  }}
+                >
+                  You have reached the limit of demo trial for {selectedType}.
+                  Please upgrade your plan
+                </motion.p>
               </motion.div>
             ) : (
               /* Upload Zone */

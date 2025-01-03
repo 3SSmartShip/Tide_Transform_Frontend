@@ -14,11 +14,59 @@ import {
   HelpCircle,
   Settings,
   Home,
+  Copy,
+  Trash2,
+  ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../Layout/Layout";
 import { dashboardStatsService } from "../../api/services/dashboardStats";
 import AllDocuments from "../AllDocuments/AllDocuments";
+import { documentHistoryService } from "../../api/services/documentHistory";
+
+const DocumentLoadingSkeleton = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="w-full"
+  >
+    {[1, 2, 3].map((index) => (
+      <motion.div
+        key={index}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{
+          opacity: [0.4, 0.7, 0.4],
+          y: 0,
+        }}
+        transition={{
+          opacity: {
+            repeat: Infinity,
+            duration: 1.5,
+            ease: "easeInOut",
+          },
+          y: {
+            duration: 0.4,
+            delay: index * 0.1,
+          },
+        }}
+        className="border-b border-zinc-800"
+      >
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-8 w-full">
+            <div className="h-4 w-48 bg-zinc-800 rounded"></div>
+            <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+            <div className="h-4 w-24 bg-zinc-800 rounded"></div>
+            <div className="h-4 w-32 bg-zinc-800 rounded"></div>
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="h-8 w-8 bg-zinc-800 rounded-full"></div>
+              <div className="h-8 w-8 bg-zinc-800 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    ))}
+  </motion.div>
+);
 
 export default function Dashboard() {
   // State declarations
@@ -34,6 +82,9 @@ export default function Dashboard() {
     { label: "3S AI Parsing", value: 0 },
   ]);
   const [overviewPeriod, setOverviewPeriod] = useState("weekly");
+  const [recentDocuments, setRecentDocuments] = useState([]);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -54,10 +105,6 @@ export default function Dashboard() {
     handleNavigation("/dashboard/api");
   };
 
-  const handleDocumentsClick = useCallback(() => {
-    navigate("/dashboard/documents");
-  }, [navigate]);
-
   const handleUpgradePlanClick = () => {
     navigate("/billing", { state: { activeTab: "plan" } });
   };
@@ -70,25 +117,28 @@ export default function Dashboard() {
   // Get date range based on selected period
   const getDateRange = (period) => {
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // Set to end of day
+
     let startDate = new Date();
+    startDate.setHours(0, 0, 0, 0); // Set to start of day
 
     switch (period) {
       case "daily":
         startDate.setDate(endDate.getDate() - 7);
         break;
       case "monthly":
-        startDate.setMonth(endDate.getMonth() - 12); // Last 12 months
+        startDate.setMonth(endDate.getMonth() - 12);
         break;
       case "yearly":
-        startDate.setFullYear(endDate.getFullYear() - 5); // Last 5 years
+        startDate.setFullYear(endDate.getFullYear() - 5);
         break;
       default:
         startDate.setDate(endDate.getDate() - 7);
     }
 
     const range = {
-      startTime: formatDateForAPI(startDate),
-      endTime: formatDateForAPI(endDate),
+      startTime: startDate.toISOString().split(".")[0] + "Z",
+      endTime: endDate.toISOString().split(".")[0] + "Z",
     };
 
     console.log(`Date Range for ${period}:`, range);
@@ -225,21 +275,35 @@ export default function Dashboard() {
         }
 
         const chartData = activities.map((item) => {
-          // Convert UTC timestamp to local date
+          // Parse the timestamp and adjust to local timezone
           const date = new Date(item.timestamp);
-          // Adjust for local timezone
-          const localDate = new Date(
-            date.getTime() - date.getTimezoneOffset() * 60000
-          );
+          // Subtract one day from the display date
+          date.setDate(date.getDate() - 1);
+
+          // Format date based on selected period
+          let dateDisplay;
+          switch (selectedPeriod) {
+            case "monthly":
+              dateDisplay = date.toLocaleDateString("en-US", {
+                month: "short",
+                year: "numeric",
+              });
+              break;
+            case "yearly":
+              dateDisplay = date.toLocaleDateString("en-US", {
+                year: "numeric",
+              });
+              break;
+            default: // daily
+              dateDisplay = date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              });
+          }
 
           return {
-            timestamp: localDate.toISOString(), // Store ISO string for sorting
-            date: localDate.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              ...(selectedPeriod === "monthly" && { year: "numeric" }),
-              ...(selectedPeriod === "yearly" && { year: "numeric" }),
-            }),
+            timestamp: date.toISOString(),
+            date: dateDisplay,
             ai: item.usage.ai,
             pattern: item.usage.pattern,
           };
@@ -299,6 +363,49 @@ export default function Dashboard() {
 
     fetchOverviewData();
   }, [overviewPeriod]);
+
+  const handleCopy = async (fileName) => {
+    try {
+      await navigator.clipboard.writeText(fileName);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleDelete = (fileName) => {
+    setRecentDocuments(
+      recentDocuments.filter((doc) => doc.fileName !== fileName)
+    );
+  };
+
+  const handleViewAllDocuments = () => {
+    navigate("/dashboard/documents");
+  };
+
+  const handleDropdown = (fileName) => {
+    setExpandedRow(fileName);
+  };
+
+  // Add this useEffect to fetch recent documents
+  useEffect(() => {
+    const fetchRecentDocuments = async () => {
+      try {
+        setDocumentsLoading(true);
+        const docs = await documentHistoryService.getDocumentHistory({
+          type: "3S_AI",
+          page: 1,
+          limit: 3,
+        });
+        setRecentDocuments(docs);
+      } catch (error) {
+        console.error("Failed to fetch recent documents:", error);
+      } finally {
+        setDocumentsLoading(false);
+      }
+    };
+
+    fetchRecentDocuments();
+  }, []);
 
   return (
     <Layout>
@@ -535,24 +642,99 @@ export default function Dashboard() {
         </div>
 
         {/* Document History */}
-        <div className="bg-zinc-900 rounded-lg overflow-hidden max-h-28">
+        <div className="bg-zinc-900 rounded-lg overflow-hidden">
           <div className="p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
               <h2 className="text-xl font-semibold text-white">
-                Document History
+                Recent Documents
               </h2>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handleDocumentsClick}
+                onClick={handleViewAllDocuments}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 View All Documents
               </motion.button>
             </div>
-            <div className="flex items-center justify-center py-12">
-              {/* Removed the Coming Soon message */}
-            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-zinc-900 rounded-lg overflow-hidden text-white text-sm"
+            >
+              {documentsLoading ? (
+                <DocumentLoadingSkeleton />
+              ) : recentDocuments.length === 0 ? (
+                <div className="p-8 text-center">No documents found</div>
+              ) : (
+                <table className="w-full">
+                  <thead className="bg-zinc-800">
+                    <tr>
+                      <th className="px-6 py-4 text-left">File Name</th>
+                      <th className="px-6 py-4 text-left">Pages</th>
+                      <th className="px-6 py-4 text-left">Status</th>
+                      <th className="px-6 py-4 text-left">Date Added</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentDocuments.map((doc, index) => (
+                      <motion.tr
+                        key={doc.fileName}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="border-b border-zinc-800 hover:bg-zinc-800/50"
+                      >
+                        <td className="px-6 py-4">{doc.fileName}</td>
+                        <td className="px-6 py-4">{doc.pages}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              doc.status === "completed"
+                                ? "bg-green-500/20 text-green-500"
+                                : doc.status === "processing"
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : "bg-red-500/20 text-red-500"
+                            }`}
+                          >
+                            {doc.status || "pending"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">{doc.dateAdded}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="p-2 hover:bg-zinc-700 rounded-full"
+                              onClick={() => handleCopy(doc.fileName)}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="p-2 hover:bg-zinc-700 rounded-full"
+                              onClick={() => handleDropdown(doc.fileName)}
+                            >
+                              <ChevronDown
+                                className={`w-4 h-4 transition-transform ${
+                                  expandedRow === doc.fileName
+                                    ? "rotate-180"
+                                    : ""
+                                }`}
+                              />
+                            </motion.button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
