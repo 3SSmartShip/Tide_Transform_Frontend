@@ -14,10 +14,22 @@ export default function SignUp() {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "SIGNED_IN") {
-          if (session?.user) {
-            // For signup, always redirect to onboarding
-            navigate("/onboarding");
+        if (event === "SIGNED_IN" && session?.user) {
+          try {
+            // Check if user exists in profiles
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+
+            if (profile) {
+              // Existing user - redirect to dashboard
+              navigate("/dashboard");
+            }
+            // If no profile, stay on onboarding page
+          } catch (error) {
+            console.error("Error checking profile:", error);
           }
         }
       }
@@ -34,6 +46,22 @@ export default function SignUp() {
     setError(null);
 
     try {
+      // First check if user already exists in profiles
+      const { data: existingUser, error: emailCheckError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("email", email)
+        .single();
+
+      if (existingUser) {
+        setError(
+          "An account with this email already exists. Please log in instead."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // If no existing user, proceed with signup
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -47,6 +75,22 @@ export default function SignUp() {
       if (signUpError) throw signUpError;
 
       if (data?.user) {
+        // Create profile for new user
+        const { error: insertError } = await supabase.from("profiles").insert([
+          {
+            id: data.user.id,
+            email: data.user.email,
+            full_name: name,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        if (insertError) {
+          console.error("Profile creation error:", insertError);
+          throw new Error("Failed to create user profile");
+        }
+
+        // Redirect to onboarding for new users
         navigate("/onboarding");
       }
     } catch (error) {
@@ -67,16 +111,21 @@ export default function SignUp() {
         options: {
           queryParams: {
             access_type: "offline",
-            prompt: "consent",
+            prompt: "select_account",
           },
-          redirectTo: `${import.meta.env.VITE_APP_URL}/onboarding`,
+          // Always redirect to onboarding first
+          redirectTo: `${window.location.origin}/onboarding`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Google Sign-In Error:", error.message);
+        setError(error.message || "Unable to sign in with Google");
+      }
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
       setError("Unable to sign in with Google. Please try again.");
+    } finally {
       setLoading(false);
     }
   };

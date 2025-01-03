@@ -13,20 +13,22 @@ export default function Login() {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "SIGNED_IN") {
-          if (session?.user) {
-            // Check if user exists in profiles table
-            const { data: userProfile, error: profileError } = await supabase
+        if (event === "SIGNED_IN" && session?.user) {
+          try {
+            // Check if user exists in profiles
+            const { data: profile } = await supabase
               .from("profiles")
               .select("*")
               .eq("id", session.user.id)
               .single();
 
-            if (profileError || !userProfile) {
-              navigate("/onboarding");
-            } else {
+            if (profile) {
+              // Existing user - redirect to dashboard
               navigate("/dashboard");
             }
+            // If no profile, stay on onboarding page
+          } catch (error) {
+            console.error("Error checking profile:", error);
           }
         }
       }
@@ -61,10 +63,25 @@ export default function Login() {
         .single();
 
       if (profileError || !userProfile) {
-        // User doesn't exist in profiles table - redirect to onboarding
+        // New user - create profile and redirect to onboarding
+        const { error: insertError } = await supabase.from("profiles").insert([
+          {
+            id: data.user.id,
+            email: data.user.email,
+            full_name: data.user.user_metadata?.full_name || "",
+            avatar_url: data.user.user_metadata?.avatar_url || "",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        if (insertError) {
+          console.error("Profile creation error:", insertError);
+        }
+
+        // Redirect to onboarding for new users
         navigate("/onboarding");
       } else {
-        // User exists - redirect to dashboard
+        // Existing user - redirect to dashboard
         navigate("/dashboard");
       }
     } catch (error) {
@@ -77,40 +94,23 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
-  
+
     try {
-      // Step 1: Initiate Google Sign-In
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           queryParams: {
             access_type: "offline",
             prompt: "select_account",
           },
+          // Always redirect to onboarding first
+          redirectTo: `${window.location.origin}/onboarding`,
         },
       });
-  
-      if (error) throw error;
-  
-      // Step 2: Check if the user is authenticated
-      const user = data?.user;
-      if (user) {
-        // Step 3: Check if the user's profile exists in the "profiles" table
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-  
-        if (profileError && profileError.code === "PGRST116") {
-          // Redirect new user to onboarding if no profile found
-          navigate("/onboarding");
-        } else if (profile) {
-          // Redirect existing user to dashboard
-          navigate("/dashboard");
-        } else {
-          throw new Error("Unexpected error while fetching user profile.");
-        }
+
+      if (error) {
+        console.error("Google Sign-In Error:", error.message);
+        setError(error.message || "Unable to sign in with Google");
       }
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
@@ -119,7 +119,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="flex min-h-screen pl-20 pr-20">

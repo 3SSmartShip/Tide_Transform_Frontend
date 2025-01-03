@@ -8,16 +8,19 @@ export default function Callback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        // Get the session after OAuth redirect
         const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-        if (error || !user) {
-          console.error("Auth error:", error);
+        if (sessionError || !session) {
+          console.error("Session error:", sessionError);
           navigate("/login");
           return;
         }
+
+        const { user } = session;
 
         // Check if user exists in profiles
         const { data: profile, error: profileError } = await supabase
@@ -26,12 +29,28 @@ export default function Callback() {
           .eq("id", user.id)
           .single();
 
-        if (profileError && profileError.code === "PGRST116") {
-          // Profile doesn't exist - new user
+        if (profileError || !profile) {
+          // New user - create profile and redirect to onboarding
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || "",
+                avatar_url: user.user_metadata?.avatar_url || "",
+                created_at: new Date().toISOString(),
+              },
+            ]);
+
+          if (insertError) {
+            console.error("Profile creation error:", insertError);
+          }
+
           localStorage.removeItem("isOnboarded");
           navigate("/onboarding");
-        } else if (profile) {
-          // Existing user
+        } else {
+          // Existing user - redirect to dashboard
           localStorage.setItem("isOnboarded", "true");
           navigate("/dashboard");
         }
