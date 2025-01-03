@@ -4,6 +4,26 @@ import { supabase } from "../../config/supabaseClient";
 import { PencilIcon, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 
+// Add SkeletonField component
+const SkeletonField = () => (
+  <motion.div
+    className="flex items-center py-4 border-b border-gray-800"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+  >
+    <motion.div
+      className="w-24 h-6 bg-zinc-800 rounded"
+      animate={{ opacity: [0.3, 0.6, 0.3] }}
+      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="ml-4 w-48 h-6 bg-zinc-800 rounded"
+      animate={{ opacity: [0.3, 0.6, 0.3] }}
+      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+    />
+  </motion.div>
+);
+
 export default function Setting() {
   const [userData, setUserData] = useState({
     id: "",
@@ -134,26 +154,40 @@ export default function Setting() {
           Account Setting
         </h1>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-full text-center pt-48">
-            <span className="text-white">Loading...</span>
-          </div>
-        ) : (
-          <>
-            {showSuccessMessage && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-lg z-50"
-              >
-                Password updated!
-              </motion.div>
-            )}
+        <motion.div
+          className="bg-[#1E1E1E] rounded-lg p-6 border border-gray-800"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          {isLoading ? (
+            // Replace static loading with skeleton animation
+            <div className="space-y-4">
+              <SkeletonField />
+              <SkeletonField />
+              <SkeletonField />
+            </div>
+          ) : (
+            <>
+              {/* Success Message Animation */}
+              {showSuccessMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-lg z-50"
+                >
+                  Password updated!
+                </motion.div>
+              )}
 
-            <div className="bg-[#1E1E1E] rounded-lg p-6 border border-gray-800">
-              {/* Name Field */}
-              <div className="flex justify-between items-center border-b border-gray-800 pb-4">
+              {/* Name Field with Animation */}
+              <motion.div
+                className="flex justify-between items-center border-b border-gray-800 pb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 <div className="flex items-center">
                   <label className="text-gray-400 w-24">Name</label>
                   {isEditingName ? (
@@ -176,7 +210,8 @@ export default function Setting() {
                       className="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700"
                       disabled={isUpdatingName} // Disable button while loading
                     >
-                      {isUpdatingName ? "Saving..." : "Save"} {/* Loader text */}
+                      {isUpdatingName ? "Saving..." : "Save"}{" "}
+                      {/* Loader text */}
                     </button>
                     <button
                       onClick={() => setIsEditingName(false)}
@@ -194,18 +229,28 @@ export default function Setting() {
                     <span>Edit</span>
                   </button>
                 )}
-              </div>
+              </motion.div>
 
-              {/* Email Field */}
-              <div className="flex items-center py-4 border-b border-gray-800">
+              {/* Email Field with Animation */}
+              <motion.div
+                className="flex items-center py-4 border-b border-gray-800"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 <label className="text-gray-400 w-24">Email</label>
                 <div className="text-white">
                   {userData.email || "Loading..."}
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Password Field */}
-              <div className="flex justify-between items-center py-4">
+              {/* Password Field with Animation */}
+              <motion.div
+                className="flex justify-between items-center py-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <div className="flex items-center">
                   <label className="text-gray-400 w-24">Password</label>
                   <div className="text-white">
@@ -221,12 +266,15 @@ export default function Setting() {
                     <span>Edit</span>
                   </button>
                 )}
-              </div>
+              </motion.div>
 
+              {/* Password Edit Form Animation */}
               {isEditingPassword && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
                   className="space-y-4 mt-4"
                 >
                   {/* Current Password Input */}
@@ -329,9 +377,9 @@ export default function Setting() {
                   </div>
                 </motion.div>
               )}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </motion.div>
       </div>
     </Layout>
   );
