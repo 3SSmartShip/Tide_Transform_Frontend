@@ -386,17 +386,34 @@ export default function Dashboard() {
     setExpandedRow(fileName);
   };
 
-  // Add this useEffect to fetch recent documents
+  // Update useEffect for fetching recent documents
   useEffect(() => {
     const fetchRecentDocuments = async () => {
       try {
         setDocumentsLoading(true);
         const docs = await documentHistoryService.getDocumentHistory({
-          type: "3S_AI",
+          type: "3S_AI", // Match the type from AllDocuments.jsx
           page: 1,
-          limit: 3,
+          limit: 3, // Only get first 3 documents
+          sortBy: "dateAdded",
+          sortOrder: "desc",
         });
-        setRecentDocuments(docs);
+
+        if (!docs) {
+          console.log("No documents found");
+          setRecentDocuments([]);
+          return;
+        }
+
+        // Format the documents to match the table structure
+        const formattedDocs = docs.map((doc) => ({
+          fileName: doc.fileName,
+          pages: doc.pages,
+          status: doc.status || "pending",
+          dateAdded: doc.dateAdded,
+        }));
+
+        setRecentDocuments(formattedDocs);
       } catch (error) {
         console.error("Failed to fetch recent documents:", error);
       } finally {
@@ -675,7 +692,6 @@ export default function Dashboard() {
                       <th className="px-6 py-4 text-left">Pages</th>
                       <th className="px-6 py-4 text-left">Status</th>
                       <th className="px-6 py-4 text-left">Date Added</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -703,32 +719,6 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4">{doc.dateAdded}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              className="p-2 hover:bg-zinc-700 rounded-full"
-                              onClick={() => handleCopy(doc.fileName)}
-                            >
-                              <Copy className="w-4 h-4" />
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              className="p-2 hover:bg-zinc-700 rounded-full"
-                              onClick={() => handleDropdown(doc.fileName)}
-                            >
-                              <ChevronDown
-                                className={`w-4 h-4 transition-transform ${
-                                  expandedRow === doc.fileName
-                                    ? "rotate-180"
-                                    : ""
-                                }`}
-                              />
-                            </motion.button>
-                          </div>
-                        </td>
                       </motion.tr>
                     ))}
                   </tbody>
