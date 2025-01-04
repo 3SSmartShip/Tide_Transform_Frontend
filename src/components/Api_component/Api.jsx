@@ -6,6 +6,31 @@ import { apiKeysService } from "../../api/services/apiKeys";
 import Layout from "../Layout/Layout";
 import React from "react";
 
+const SkeletonRow = () => (
+  <motion.tr
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="border-b border-zinc-800"
+  >
+    {[...Array(6)].map((_, index) => (
+      <td key={index} className="py-4">
+        <motion.div
+          animate={{
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 1.5,
+            ease: "easeInOut",
+          }}
+          className="h-6 bg-zinc-800 rounded"
+          style={{ width: index === 1 ? "200px" : "100px" }}
+        />
+      </td>
+    ))}
+  </motion.tr>
+);
+
 export default function ApiDashboard() {
   const [apis, setApis] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -146,93 +171,101 @@ export default function ApiDashboard() {
           </div>
         </div>
 
-        <motion.div className="bg-zinc-900 rounded-lg">
+        <motion.div
+          className="bg-zinc-900 rounded-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <div className="p-6">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-full text-center">
-                <span className="text-white">Loading APIs...</span>
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="text-left pb-3 text-zinc-400 font-medium">
-                      API Name
-                    </th>
-                    <th className="text-left pb-3 text-zinc-400 font-medium">
-                      API Key
-                    </th>
-                    <th className="text-left pb-3 text-zinc-400 font-medium">
-                      Created
-                    </th>
-                    <th className="text-left pb-3 text-zinc-400 font-medium">
-                      Expires
-                    </th>
-                    <th className="text-left pb-3 text-zinc-400 font-medium">
-                      Status
-                    </th>
-                    <th className="text-left pb-3 text-zinc-400 font-medium w-[50px]"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {apis.map((api) => (
-                    <motion.tr
-                      key={api.id}
-                      className="border-b border-zinc-800"
-                    >
-                      <td className="py-4 font-medium text-white">
-                        {api.name}
-                      </td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-zinc-400">
-                            {api.visible ? api.key : "•".repeat(20)}
-                          </span>
-                          <button
-                            onClick={() => copyToClipboard(api.id, api.key)}
-                            className="p-1 hover:bg-zinc-800 rounded"
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left pb-3 text-zinc-400 font-medium">
+                    API Name
+                  </th>
+                  <th className="text-left pb-3 text-zinc-400 font-medium">
+                    API Key
+                  </th>
+                  <th className="text-left pb-3 text-zinc-400 font-medium">
+                    Created
+                  </th>
+                  <th className="text-left pb-3 text-zinc-400 font-medium">
+                    Expires
+                  </th>
+                  <th className="text-left pb-3 text-zinc-400 font-medium">
+                    Status
+                  </th>
+                  <th className="text-left pb-3 text-zinc-400 font-medium w-[50px]"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading
+                  ? // Replace loading text with skeleton rows
+                    [...Array(3)].map((_, index) => <SkeletonRow key={index} />)
+                  : apis.map((api) => (
+                      <motion.tr
+                        key={api.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="border-b border-zinc-800"
+                      >
+                        <td className="py-4 font-medium text-white">
+                          {api.name}
+                        </td>
+                        <td className="py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-zinc-400">
+                              {api.visible ? api.key : "•".repeat(20)}
+                            </span>
+                            <button
+                              onClick={() => copyToClipboard(api.id, api.key)}
+                              className="p-1 hover:bg-zinc-800 rounded"
+                            >
+                              <Copy className="h-4 w-4 text-zinc-500 hover:text-zinc-400" />
+                            </button>
+                            {copiedStates[api.id] && (
+                              <span className="text-green-400 ml-2">
+                                Copied!
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 text-zinc-400">
+                          {new Date(api.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 text-zinc-400">
+                          {new Date(api.expires_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-4">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                              new Date() >= new Date(api.created_at) &&
+                              new Date() <= new Date(api.expires_at)
+                                ? "border-green-200 text-green-200"
+                                : "border-[#FBB025] text-[#FBB025]"
+                            }`}
                           >
-                            <Copy className="h-4 w-4 text-zinc-500 hover:text-zinc-400" />
-                          </button>
-                          {copiedStates[api.id] && (
-                            <span className="text-green-400 ml-2">Copied!</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-4 text-zinc-400">
-                        {new Date(api.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 text-zinc-400">
-                        {new Date(api.expires_at).toLocaleDateString()}
-                      </td>
-                      <td className="py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                            new Date() >= new Date(api.created_at) &&
+                            {new Date() >= new Date(api.created_at) &&
                             new Date() <= new Date(api.expires_at)
-                              ? "border-green-200 text-green-200"
-                              : "border-[#FBB025] text-[#FBB025]"
-                          }`}
-                        >
-                          {new Date() >= new Date(api.created_at) &&
-                          new Date() <= new Date(api.expires_at)
-                            ? "Active"
-                            : "Not Active"}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        <button
-                          onClick={() => deleteApi(api.id)}
-                          className="p-2 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-md"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                              ? "Active"
+                              : "Not Active"}
+                          </span>
+                        </td>
+                        <td className="py-4">
+                          <button
+                            onClick={() => deleteApi(api.id)}
+                            className="p-2 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-md"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))}
+              </tbody>
+            </table>
           </div>
         </motion.div>
 
