@@ -2,9 +2,12 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Filter, Trash2, Copy, Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Layout from "../Layout/Layout";
 import { documentHistoryService } from "@/api/services/documentHistory";
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css'; // Dark theme
+import 'prismjs/components/prism-json'; // JSON syntax support
 
 export default function DocumentTable() {
   const [documents, setDocuments] = useState([]);
@@ -19,9 +22,17 @@ export default function DocumentTable() {
   const [expandedRow, setExpandedRow] = useState(null);
   const [copiedDoc, setCopiedDoc] = useState(null);
 
+  const jsonRef = useRef({});
+
   useEffect(() => {
     fetchDocuments();
   }, [page]);
+
+  useEffect(() => {
+    if (expandedRow) {
+      Prism.highlightElement(jsonRef.current[expandedRow]);
+    }
+  }, [expandedRow]);
 
   const fetchDocuments = async () => {
     try {
@@ -305,9 +316,14 @@ export default function DocumentTable() {
                       {expandedRow === doc.fileName && (
                         <tr className="bg-zinc-800/30">
                           <td colSpan="5" className="px-6 py-4">
-                            <div className="overflow-x-auto">
-                              <pre className="text-sm text-gray-300 whitespace-pre-wrap">
-                                {JSON.stringify(doc.response, null, 2)}
+                            <div className="overflow-x-auto rounded-lg bg-[#1E1E1E] p-4">
+                              <pre className="language-json">
+                                <code
+                                  ref={el => jsonRef.current[doc.fileName] = el}
+                                  className="text-sm whitespace-pre-wrap break-words"
+                                >
+                                  {JSON.stringify(doc.response, null, 2)}
+                                </code>
                               </pre>
                             </div>
                           </td>

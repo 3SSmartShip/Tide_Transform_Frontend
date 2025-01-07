@@ -253,7 +253,7 @@ export default function Layout({ children }) {
                             />
                           </div>
                           <button
-                            className="w-full py-2 border border-gray-700 rounded-md hover:bg-gray-800 transition-colors text-white "
+                            className="w-full py-2 border border-gray-700 rounded-md hover:bg-blue-600 transition-colors text-white "
                             onClick={() => navigate("/billings")}
                           >
                             Upgrade Plan

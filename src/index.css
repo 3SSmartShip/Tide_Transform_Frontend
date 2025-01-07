@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter+Display:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter+Display:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   html {
-    font-family: 'Inter Display', sans-serif;
+    font-family: "Inter Display", sans-serif;
   }
 }
 
@@ -33,4 +33,49 @@
 .json-tree-container ul {
   margin: 0 !important;
   padding-left: 1.25rem !important;
+}
+
+/* Add these custom styles for JSON syntax highlighting */
+.language-json .token.property {
+  color: #7ee787;
+}
+
+.language-json .token.string {
+  color: #a5d6ff;
+}
+
+.language-json .token.number {
+  color: #79c0ff;
+}
+
+.language-json .token.boolean {
+  color: #ff7b72;
+}
+
+.language-json .token.null {
+  color: #ff7b72;
+}
+
+.language-json .token.punctuation {
+  color: #c9d1d9;
+}
+
+/* Add scrollbar styling */
+pre::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: #1e1e1e;
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
