@@ -41,7 +41,7 @@ export const documentsApi = {
           throw new Error(response.data.message || 'Processing failed');
         }
 
-        timeInterval= timeInterval * 2;
+        timeInterval = timeInterval * 2;
         attempts++;
         await new Promise(resolve => setTimeout(resolve, timeInterval));
       } catch (error) {
@@ -70,20 +70,41 @@ export const documentsApi = {
 
   async uploadManual(formData, onStatusUpdate) {
     try {
-      // Step 1: Upload and get job ID
-      onStatusUpdate?.('Uploading manual...');
-      const uploadResponse = await api.post('/api/v1/transform/manual', formData);
-      // console.log('Upload manual response:', uploadResponse.data);
+      // Get and validate page numbers
+      const pageNumbers = formData.get('pageNumbers');
+      if (!pageNumbers) {
+        throw new Error('Page numbers are required');
+      }
+
+      let parsedPageNumbers;
+      try {
+        parsedPageNumbers = JSON.parse(pageNumbers);
+        if (!Array.isArray(parsedPageNumbers) || parsedPageNumbers.length === 0) {
+          throw new Error('Invalid page numbers format');
+        }
+      } catch (e) {
+        throw new Error('Invalid page numbers format');
+      }
+
+      // Create a new FormData with the correct format
+      const newFormData = new FormData();
+      newFormData.append('file', formData.get('file'));
+      newFormData.append('pageNumbers', JSON.stringify(parsedPageNumbers));
+
+      onStatusUpdate?.({ operation: 'Uploading manual...', percentage: '0%' });
+
+      const uploadResponse = await api.post('/api/v1/transform/manual', newFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
 
       if (!uploadResponse.data?.jobId) {
         throw new Error('No job ID received');
       }
 
-      // Step 2: Poll for results
-      onStatusUpdate?.('Processing started...');
-      const result = await this.pollStatus(uploadResponse.data.jobId, onStatusUpdate);
-      // console.log('Final manual result:', result);
-      return result;
+      onStatusUpdate?.({ operation: 'Processing started...', percentage: '0%' });
+      return await this.pollStatus(uploadResponse.data.jobId, onStatusUpdate);
     } catch (error) {
       console.error('Manual processing error:', error);
       throw error;

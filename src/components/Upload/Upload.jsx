@@ -219,66 +219,210 @@ const renderSection = (title, data) => {
   );
 };
 
-// BeautifiedPDF component for manuals
-const BeautifiedPDF = ({ jsonData }) => {
-  const { data } = jsonData?.data || jsonData;
+// PDF specific styles
+const pdfStyles = StyleSheet.create({
+  page: {
+    padding: 30,
+    backgroundColor: "#ffffff",
+  },
+  header: {
+    fontSize: 24,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#2563EB",
+    fontWeight: "bold",
+  },
+  sectionHeader: {
+    fontSize: 18,
+    marginTop: 15,
+    marginBottom: 10,
+    color: "#1F2937",
+    backgroundColor: "#F3F4F6",
+    padding: 8,
+    borderRadius: 4,
+  },
+  section: {
+    marginBottom: 15,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 4,
+  },
+  row: {
+    flexDirection: "row",
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    paddingBottom: 4,
+  },
+  label: {
+    width: "30%",
+    fontSize: 12,
+    color: "#4B5563",
+    fontWeight: "bold",
+  },
+  value: {
+    width: "70%",
+    fontSize: 12,
+    color: "#1F2937",
+  },
+  subsection: {
+    marginLeft: 15,
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 4,
+  },
+  subheader: {
+    fontSize: 14,
+    marginBottom: 8,
+    color: "#4B5563",
+    fontWeight: "bold",
+  },
+});
 
-  const sections = [
-    {
-      title: "Assembly and Subassembly Details",
-      data: data?.assembly_and_subassembly_detection?.map((item) => ({
-        "Part Number": item.part_number,
-        "Maker Name": item.maker_details?.name,
-        "Maker Address": item.maker_details?.address,
-        "Contact Phone": item.maker_details?.contact?.phone,
-        "Contact Email": item.maker_details?.contact?.email,
-        "Serial Number": item.serial_number,
-        Model: item.model,
-        Quantity: item.quantity,
-      })),
-    },
-    {
-      title: "Spare Parts Information",
-      data: data?.spare_parts_information?.map((item) => ({
-        "Part Number": item.part_number,
-        Description: item.description,
-        "Quantity in Stock": item.quantity_in_stock,
-        Compatibility: item.compatibility,
-        Price: item.price,
-      })),
-    },
-    {
-      title: "Manufacturer Contact Details",
-      data: data?.manufacturer_contact_details?.map((item) => ({
-        Name: item.manufacturer_name,
-        Address: item.address,
-        Phone: item.phone,
-        Email: item.email,
-        Website: item.website,
-      })),
-    },
-  ];
+// Updated BeautifiedPDF component
+const BeautifiedPDF = ({ jsonData }) => {
+  const pageData = jsonData?.data?.data?.page_0;
+
+  if (!pageData) return null;
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.header}>{data?.type || "Manual"}</Text>
+      <Page size="A4" style={pdfStyles.page}>
+        <Text style={pdfStyles.header}>Manual Details</Text>
 
-        {sections.map((section, index) => (
-          <View key={index}>
-            <Text style={styles.sectionHeader}>{section.title}</Text>
-            {section.data?.map((item, idx) => (
-              <View key={idx} style={styles.section}>
-                {Object.entries(item).map(([key, value]) => (
-                  <View key={key} style={styles.row}>
-                    <Text style={styles.label}>{key}:</Text>
-                    <Text style={styles.value}>{value}</Text>
+        {/* Assembly Section */}
+        {pageData.assembly && pageData.assembly.length > 0 && (
+          <>
+            <Text style={pdfStyles.sectionHeader}>Assembly Information</Text>
+            {pageData.assembly.map((assembly, index) => (
+              <View key={index} style={pdfStyles.section}>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Name:</Text>
+                  <Text style={pdfStyles.value}>{assembly.name || "N/A"}</Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Part Number:</Text>
+                  <Text style={pdfStyles.value}>
+                    {assembly.part_number || "N/A"}
+                  </Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Model:</Text>
+                  <Text style={pdfStyles.value}>{assembly.model || "N/A"}</Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Serial Number:</Text>
+                  <Text style={pdfStyles.value}>
+                    {assembly.serial_number || "N/A"}
+                  </Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Quantity:</Text>
+                  <Text style={pdfStyles.value}>
+                    {assembly.quantity || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Maker Details */}
+                {assembly.maker_details && (
+                  <View style={pdfStyles.subsection}>
+                    <Text style={pdfStyles.subheader}>Maker Details</Text>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Name:</Text>
+                      <Text style={pdfStyles.value}>
+                        {assembly.maker_details.name || "N/A"}
+                      </Text>
+                    </View>
+                    {assembly.maker_details.address && (
+                      <View style={pdfStyles.row}>
+                        <Text style={pdfStyles.label}>Address:</Text>
+                        <Text style={pdfStyles.value}>
+                          {assembly.maker_details.address || "N/A"}
+                        </Text>
+                      </View>
+                    )}
+                    {assembly.maker_details.contact && (
+                      <>
+                        {assembly.maker_details.contact.phone && (
+                          <View style={pdfStyles.row}>
+                            <Text style={pdfStyles.label}>Phone:</Text>
+                            <Text style={pdfStyles.value}>
+                              {assembly.maker_details.contact.phone || "N/A"}
+                            </Text>
+                          </View>
+                        )}
+                        {assembly.maker_details.contact.email && (
+                          <View style={pdfStyles.row}>
+                            <Text style={pdfStyles.label}>Email:</Text>
+                            <Text style={pdfStyles.value}>
+                              {assembly.maker_details.contact.email || "N/A"}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
                   </View>
-                ))}
+                )}
               </View>
             ))}
-          </View>
-        ))}
+          </>
+        )}
+
+        {/* Manufacturer Contact Details */}
+        {pageData.manufacturer_contact_details &&
+          pageData.manufacturer_contact_details.length > 0 && (
+            <>
+              <Text style={pdfStyles.sectionHeader}>
+                Manufacturer Contact Details
+              </Text>
+              {pageData.manufacturer_contact_details.map(
+                (manufacturer, index) => (
+                  <View key={index} style={pdfStyles.section}>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Name:</Text>
+                      <Text style={pdfStyles.value}>
+                        {manufacturer.manufacturer_name || "N/A"}
+                      </Text>
+                    </View>
+                    {manufacturer.address && (
+                      <View style={pdfStyles.row}>
+                        <Text style={pdfStyles.label}>Address:</Text>
+                        <Text style={pdfStyles.value}>
+                          {manufacturer.address || "N/A"}
+                        </Text>
+                      </View>
+                    )}
+                    {manufacturer.phone && (
+                      <View style={pdfStyles.row}>
+                        <Text style={pdfStyles.label}>Phone:</Text>
+                        <Text style={pdfStyles.value}>
+                          {manufacturer.phone || "N/A"}
+                        </Text>
+                      </View>
+                    )}
+                    {manufacturer.email && (
+                      <View style={pdfStyles.row}>
+                        <Text style={pdfStyles.label}>Email:</Text>
+                        <Text style={pdfStyles.value}>
+                          {manufacturer.email || "N/A"}
+                        </Text>
+                      </View>
+                    )}
+                    {manufacturer.website && (
+                      <View style={pdfStyles.row}>
+                        <Text style={pdfStyles.label}>Website:</Text>
+                        <Text style={pdfStyles.value}>
+                          {manufacturer.website || "N/A"}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )
+              )}
+            </>
+          )}
       </Page>
     </Document>
   );
@@ -286,87 +430,106 @@ const BeautifiedPDF = ({ jsonData }) => {
 
 // InvoicePDF component
 const InvoicePDF = ({ jsonData }) => {
-  const { data } = jsonData?.data || jsonData;
+  // Extract all pages data
+  const pages = Object.entries(jsonData?.data?.data || {})
+    .filter(([key]) => key.startsWith("page_"))
+    .map(([_, value]) => value);
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.header}>Invoice Details</Text>
+      {pages.map((pageData, pageIndex) => (
+        <Page key={pageIndex} size="A4" style={styles.page}>
+          <Text style={styles.header}>Invoice Details</Text>
 
-        <View style={styles.section}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Customer:</Text>
-            <Text style={styles.value}>{data.customer}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Date:</Text>
-            <Text style={styles.value}>{data.date}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Invoice No:</Text>
-            <Text style={styles.value}>{data.invoice_no}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Order No:</Text>
-            <Text style={styles.value}>{data.order_no}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionHeader}>Items</Text>
-        {data.items.map((item, index) => (
-          <View key={index} style={styles.itemBox}>
+          <View style={styles.section}>
             <View style={styles.row}>
-              <Text style={styles.label}>Description</Text>
-              <Text style={styles.value}>{item.description}</Text>
+              <Text style={styles.label}>Customer:</Text>
+              <Text style={styles.value}>{pageData.customer}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Part No</Text>
-              <Text style={styles.value}>{item.part_no}</Text>
+              <Text style={styles.label}>Date:</Text>
+              <Text style={styles.value}>{pageData.date}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Quantity</Text>
-              <Text style={styles.value}>{item.quantity}</Text>
+              <Text style={styles.label}>Invoice No:</Text>
+              <Text style={styles.value}>{pageData.invoice_no}</Text>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Unit Price</Text>
-              <Text
-                style={styles.value}
-              >{`${item.currency} ${item.unit_price}`}</Text>
-            </View>
-            <View style={[styles.row, { borderBottomWidth: 0 }]}>
-              <Text style={styles.label}>Total Price</Text>
-              <Text
-                style={styles.value}
-              >{`${item.currency} ${item.total_price}`}</Text>
-            </View>
+            {pageData.order_no && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Order No:</Text>
+                <Text style={styles.value}>{pageData.order_no}</Text>
+              </View>
+            )}
           </View>
-        ))}
 
-        <View style={styles.section}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Discount:</Text>
-            <Text style={styles.value}>{data.discount}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Total Amount:</Text>
-            <Text
-              style={styles.value}
-            >{`${data.currency} ${data.total_amount}`}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionHeader}>Payment Instructions</Text>
-        <View style={styles.section}>
-          {Object.entries(data.payment_instructions).map(([key, value]) => (
-            <View key={key} style={styles.row}>
-              <Text style={styles.label}>
-                {key.replace(/_/g, " ").toUpperCase()}:
-              </Text>
-              <Text style={styles.value}>{value}</Text>
+          <Text style={styles.sectionHeader}>Items</Text>
+          {pageData.items?.map((item, index) => (
+            <View key={index} style={styles.itemBox}>
+              <View style={styles.row}>
+                <Text style={styles.label}>Description</Text>
+                <Text style={styles.value}>{item.description}</Text>
+              </View>
+              {item.part_no && item.part_no !== "N/A" && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Part No</Text>
+                  <Text style={styles.value}>{item.part_no}</Text>
+                </View>
+              )}
+              <View style={styles.row}>
+                <Text style={styles.label}>Quantity</Text>
+                <Text style={styles.value}>{item.quantity}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Unit Price</Text>
+                <Text
+                  style={styles.value}
+                >{`${item.currency} ${item.unit_price}`}</Text>
+              </View>
+              <View style={[styles.row, { borderBottomWidth: 0 }]}>
+                <Text style={styles.label}>Total Price</Text>
+                <Text
+                  style={styles.value}
+                >{`${item.currency} ${item.total_price}`}</Text>
+              </View>
             </View>
           ))}
-        </View>
-      </Page>
+
+          <View style={styles.section}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Discount:</Text>
+              <Text style={styles.value}>{pageData.discount}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Total Amount:</Text>
+              <Text
+                style={styles.value}
+              >{`${pageData.currency} ${pageData.total_amount}`}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.sectionHeader}>Payment Instructions</Text>
+          <View style={styles.section}>
+            {Object.entries(pageData.payment_instructions || {}).map(
+              ([key, value]) =>
+                value &&
+                value !== "N/A" && (
+                  <View key={key} style={styles.row}>
+                    <Text style={styles.label}>
+                      {key.replace(/_/g, " ").toUpperCase()}:
+                    </Text>
+                    <Text style={styles.value}>{value}</Text>
+                  </View>
+                )
+            )}
+          </View>
+
+          {pageIndex < pages.length - 1 && (
+            <Text style={[styles.sectionHeader, { marginTop: 20 }]}>
+              Page {pageIndex + 1} of {pages.length}
+            </Text>
+          )}
+        </Page>
+      ))}
     </Document>
   );
 };
@@ -377,10 +540,11 @@ const PDFPreview = ({ data }) => {
     return null;
   }
 
-  const isInvoice = data?.data?.data?.type?.toLowerCase()?.includes("invoice");
-  const fileName = isInvoice
-    ? `invoice_${data?.data?.data?.invoice_no || "document"}.pdf`
-    : `manual_${data?.data?.data?.file_name || "document"}.pdf`;
+  // Check if it's a manual (has assembly array) or invoice
+  const isManual = data?.data?.data?.page_0?.assembly !== undefined;
+  const fileName = isManual
+    ? `manual_${Date.now()}.pdf`
+    : `invoice_${data?.data?.data?.page_0?.invoice_no || "document"}.pdf`;
 
   return (
     <div className="mt-4">
@@ -388,10 +552,10 @@ const PDFPreview = ({ data }) => {
       <div className="p-4 rounded">
         <PDFDownloadLink
           document={
-            isInvoice ? (
-              <InvoicePDF jsonData={data} />
+            isManual ? (
+              <ManualPDF jsonData={data} />
             ) : (
-              <BeautifiedPDF jsonData={data} />
+              <InvoicePDF jsonData={data} />
             )
           }
           fileName={fileName}
@@ -403,6 +567,245 @@ const PDFPreview = ({ data }) => {
         </PDFDownloadLink>
       </div>
     </div>
+  );
+};
+
+// New ManualPDF component
+const ManualPDF = ({ jsonData }) => {
+  const pageData = jsonData?.data?.data?.page_0;
+
+  if (!pageData) return null;
+
+  return (
+    <Document>
+      <Page size="A4" style={pdfStyles.page}>
+        <Text style={pdfStyles.header}>Manual Details</Text>
+
+        {/* Assembly Section */}
+        {pageData.assembly && pageData.assembly.length > 0 && (
+          <>
+            <Text style={pdfStyles.sectionHeader}>Assembly Information</Text>
+            {pageData.assembly.map((assembly, index) => (
+              <View key={index} style={pdfStyles.section}>
+                {/* Main Assembly Details */}
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Name:</Text>
+                  <Text style={pdfStyles.value}>{assembly.name || "N/A"}</Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Part Number:</Text>
+                  <Text style={pdfStyles.value}>
+                    {assembly.part_number || "N/A"}
+                  </Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Model:</Text>
+                  <Text style={pdfStyles.value}>{assembly.model || "N/A"}</Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Serial Number:</Text>
+                  <Text style={pdfStyles.value}>
+                    {assembly.serial_number || "N/A"}
+                  </Text>
+                </View>
+                <View style={pdfStyles.row}>
+                  <Text style={pdfStyles.label}>Quantity:</Text>
+                  <Text style={pdfStyles.value}>
+                    {assembly.quantity || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Maker Details */}
+                {assembly.maker_details && (
+                  <View style={pdfStyles.subsection}>
+                    <Text style={pdfStyles.subheader}>Maker Details</Text>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Name:</Text>
+                      <Text style={pdfStyles.value}>
+                        {assembly.maker_details.name || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Address:</Text>
+                      <Text style={pdfStyles.value}>
+                        {assembly.maker_details.address || "N/A"}
+                      </Text>
+                    </View>
+                    {assembly.maker_details.contact && (
+                      <>
+                        <View style={pdfStyles.row}>
+                          <Text style={pdfStyles.label}>Phone:</Text>
+                          <Text style={pdfStyles.value}>
+                            {assembly.maker_details.contact.phone || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={pdfStyles.row}>
+                          <Text style={pdfStyles.label}>Email:</Text>
+                          <Text style={pdfStyles.value}>
+                            {assembly.maker_details.contact.email || "N/A"}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                )}
+
+                {/* Subassembly Section */}
+                {assembly.subassembly && assembly.subassembly.length > 0 && (
+                  <View style={pdfStyles.subsection}>
+                    <Text style={pdfStyles.subheader}>Subassembly Details</Text>
+                    {assembly.subassembly.map((sub, subIndex) => (
+                      <View key={subIndex} style={pdfStyles.subSection}>
+                        <View style={pdfStyles.row}>
+                          <Text style={pdfStyles.label}>Name:</Text>
+                          <Text style={pdfStyles.value}>
+                            {sub.name || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={pdfStyles.row}>
+                          <Text style={pdfStyles.label}>Part Number:</Text>
+                          <Text style={pdfStyles.value}>
+                            {sub.part_number || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={pdfStyles.row}>
+                          <Text style={pdfStyles.label}>Quantity:</Text>
+                          <Text style={pdfStyles.value}>
+                            {sub.quantity || "N/A"}
+                          </Text>
+                        </View>
+
+                        {/* Parts within Subassembly */}
+                        {sub.parts && sub.parts.length > 0 && (
+                          <View style={pdfStyles.nestedSubsection}>
+                            <Text style={pdfStyles.subheader}>Parts</Text>
+                            {sub.parts.map((part, partIndex) => (
+                              <View key={partIndex} style={pdfStyles.row}>
+                                <Text style={pdfStyles.label}>
+                                  Part {partIndex + 1}:
+                                </Text>
+                                <Text style={pdfStyles.value}>
+                                  {`${part.name} (${part.part_number}) - Qty: ${part.quantity}, Material: ${part.material}, Weight: ${part.weight}`}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Parts Section */}
+                {assembly.parts && assembly.parts.length > 0 && (
+                  <View style={pdfStyles.subsection}>
+                    <Text style={pdfStyles.subheader}>Parts</Text>
+                    {assembly.parts.map((part, partIndex) => (
+                      <View key={partIndex} style={pdfStyles.row}>
+                        <Text style={pdfStyles.label}>
+                          Part {partIndex + 1}:
+                        </Text>
+                        <Text style={pdfStyles.value}>
+                          {`${part.name} (${part.part_number}) - Qty: ${part.quantity}, Material: ${part.material}, Weight: ${part.weight}`}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* Spare Parts Information */}
+        {pageData.spare_parts_information &&
+          pageData.spare_parts_information.length > 0 && (
+            <>
+              <Text style={pdfStyles.sectionHeader}>
+                Spare Parts Information
+              </Text>
+              {pageData.spare_parts_information.map((part, index) => (
+                <View key={index} style={pdfStyles.section}>
+                  <View style={pdfStyles.row}>
+                    <Text style={pdfStyles.label}>Part Number:</Text>
+                    <Text style={pdfStyles.value}>
+                      {part.part_number || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={pdfStyles.row}>
+                    <Text style={pdfStyles.label}>Description:</Text>
+                    <Text style={pdfStyles.value}>
+                      {part.description || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={pdfStyles.row}>
+                    <Text style={pdfStyles.label}>Quantity in Stock:</Text>
+                    <Text style={pdfStyles.value}>
+                      {part.quantity_in_stock || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={pdfStyles.row}>
+                    <Text style={pdfStyles.label}>Compatibility:</Text>
+                    <Text style={pdfStyles.value}>
+                      {part.compatibility || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={pdfStyles.row}>
+                    <Text style={pdfStyles.label}>Price:</Text>
+                    <Text style={pdfStyles.value}>{part.price || "N/A"}</Text>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+
+        {/* Manufacturer Contact Details */}
+        {pageData.manufacturer_contact_details &&
+          pageData.manufacturer_contact_details.length > 0 && (
+            <>
+              <Text style={pdfStyles.sectionHeader}>
+                Manufacturer Contact Details
+              </Text>
+              {pageData.manufacturer_contact_details.map(
+                (manufacturer, index) => (
+                  <View key={index} style={pdfStyles.section}>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Name:</Text>
+                      <Text style={pdfStyles.value}>
+                        {manufacturer.manufacturer_name || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Address:</Text>
+                      <Text style={pdfStyles.value}>
+                        {manufacturer.address || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Phone:</Text>
+                      <Text style={pdfStyles.value}>
+                        {manufacturer.phone || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Email:</Text>
+                      <Text style={pdfStyles.value}>
+                        {manufacturer.email || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={pdfStyles.row}>
+                      <Text style={pdfStyles.label}>Website:</Text>
+                      <Text style={pdfStyles.value}>
+                        {manufacturer.website || "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+                )
+              )}
+            </>
+          )}
+      </Page>
+    </Document>
   );
 };
 
@@ -456,6 +859,24 @@ const containerVariants = {
   },
 };
 
+// Add these animation variants at the top of the file
+const progressBarVariants = {
+  initial: { width: "0%" },
+  animate: (percentage) => ({
+    width: `${percentage}%`,
+    transition: { duration: 0.5, ease: "easeInOut" },
+  }),
+};
+
+const progressTextVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+};
+
 export default function Upload() {
   const [invoiceFiles, setInvoiceFiles] = useState([]);
   const [manualFiles, setManualFiles] = useState([]);
@@ -472,6 +893,7 @@ export default function Upload() {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [jobStatus, setJobStatus] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [pageNumbers, setPageNumbers] = useState("");
 
   const handleInvoiceUpload = async () => {
     if (invoiceFiles.length === 0) {
@@ -489,7 +911,12 @@ export default function Upload() {
       const result = await documentsApi.transformDocument(
         formData,
         (status) => {
-          setJobStatus(status);
+          // Parse the percentage from the status
+          const percentage = status?.percentage?.replace("%", "") || "0";
+          setJobStatus({
+            operation: status?.operation || "Processing",
+            percentage: percentage,
+          });
         }
       );
 
@@ -532,24 +959,44 @@ export default function Upload() {
       return;
     }
 
+    // Validate and parse page numbers
+    if (!pageNumbers.trim()) {
+      setManualError("Please enter page numbers to process");
+      return;
+    }
+
+    // Parse and validate page numbers
+    const pageNumbersArray = pageNumbers
+      .split(",")
+      .map((num) => parseInt(num.trim()))
+      .filter((num) => !isNaN(num));
+
+    if (pageNumbersArray.length === 0) {
+      setManualError("Please enter valid page numbers (e.g., 1,2,3)");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", manualFiles[0]);
+    formData.append("pageNumbers", JSON.stringify(pageNumbersArray)); // Ensure it's properly stringified
 
     setManualLoading(true);
     setManualError(null);
 
     try {
       const result = await documentsApi.uploadManual(formData, (status) => {
-        setJobStatus(status);
+        setJobStatus({
+          operation: status.operation,
+          percentage: status.percentage,
+        });
       });
 
       if (result) {
-        const formattedData = {
+        setManualParsedData({
           data: {
             data: result,
           },
-        };
-        setManualParsedData(formattedData);
+        });
         setManualFiles([]);
         setManualSuccessMessage("Manual processed successfully!");
         setPdfUrl(true);
@@ -557,22 +1004,16 @@ export default function Upload() {
     } catch (error) {
       console.error("Manual processing error:", error);
       setManualError(
-        JSON.stringify(
-          {
-            error: {
-              status: error.response?.status || 500,
-              message: error.message || "Error processing manual",
-            },
-          },
-          null,
-          2
-        )
+        error.response?.data?.message ||
+          error.message ||
+          "Error processing manual"
       );
       setManualParsedData(null);
       setPdfUrl(null);
     } finally {
       setManualLoading(false);
       setJobStatus(null);
+      // Don't reset pageNumbers here to allow for multiple uploads with same pages
     }
   };
 
@@ -670,6 +1111,12 @@ export default function Upload() {
     }
   };
 
+  const handlePageNumberInput = (value) => {
+    // Remove any non-digit, non-comma, and non-space characters
+    const cleanedValue = value.replace(/[^0-9,\s]/g, "");
+    setPageNumbers(cleanedValue);
+  };
+
   const UploadView = () => (
     <div className="w-full">
       <div className="flex flex-col">
@@ -743,6 +1190,31 @@ export default function Upload() {
             </p>
           </label>
         </div>
+
+        {selectedMode === "manual" && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Page Numbers <span className="text-red-500">*</span>
+            </label>
+            <div className="flex flex-col space-y-2">
+              <input
+                type="text"
+                value={pageNumbers}
+                onChange={(e) => handlePageNumberInput(e.target.value)}
+                placeholder="Enter page numbers (e.g., 1,2,3)"
+                className={`px-4 py-2 bg-gray-700 border ${
+                  manualError && !pageNumbers.trim()
+                    ? "border-red-500"
+                    : "border-gray-600"
+                } rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                required
+              />
+              <p className="text-sm text-gray-400">
+                Enter comma-separated page numbers to process (required).
+              </p>
+            </div>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {selectedMode === "invoice" && invoiceFiles.length > 0 && (
@@ -862,8 +1334,9 @@ export default function Upload() {
                 : handleManualUpload
             }
             disabled={
-              (selectedMode === "invoice" ? invoiceFiles : manualFiles)
-                .length === 0 ||
+              (selectedMode === "invoice"
+                ? invoiceFiles.length === 0
+                : manualFiles.length === 0 || !pageNumbers.trim()) ||
               (selectedMode === "invoice" ? invoiceLoading : manualLoading)
             }
             className="mt-6 w-full max-w-xs bg-[#2563EB] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 text-m"
@@ -874,7 +1347,7 @@ export default function Upload() {
                 : "Transform Document"
               : manualLoading
               ? "Transforming..."
-              : "Transform Manuals "}
+              : "Transform Manuals"}
           </motion.button>
         </div>
 
@@ -884,6 +1357,36 @@ export default function Upload() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
+            {/* Progress Bar Container */}
+            <div className="w-full max-w-md h-4 bg-gray-700 rounded-full overflow-hidden mb-4">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                variants={progressBarVariants}
+                initial="initial"
+                animate="animate"
+                custom={parseFloat(jobStatus?.percentage || "0")}
+              />
+            </div>
+
+            {/* Progress Text */}
+            <motion.div
+              variants={progressTextVariants}
+              initial="initial"
+              animate="animate"
+              className="text-center"
+            >
+              <motion.p
+                className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {jobStatus?.operation || "Processing"}
+              </motion.p>
+              <p className="text-gray-500 mt-2">
+                {jobStatus?.percentage || "0%"} Complete
+              </p>
+            </motion.div>
+
             {/* Particle effects */}
             {[...Array(8)].map((_, i) => (
               <motion.div
@@ -904,25 +1407,6 @@ export default function Upload() {
               variants={loadingVariants}
               animate="animate"
             />
-
-            {jobStatus && (
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="text-center mt-6"
-              >
-                <motion.p
-                  className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {jobStatus}
-                </motion.p>
-                <p className="text-gray-500 mt-2">
-                  Processing your document with AI magic ✨
-                </p>
-              </motion.div>
-            )}
           </motion.div>
         )}
 
