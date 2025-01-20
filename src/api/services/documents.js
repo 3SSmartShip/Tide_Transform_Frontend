@@ -27,6 +27,7 @@ export const documentsApi = {
   async pollStatus(jobId, onStatusUpdate) {
     let status = 'pending';
     const maxAttempts = 30;
+    let timeInterval = 2000;
     let attempts = 0;
 
     while (status === 'pending' && attempts < maxAttempts) {
@@ -40,9 +41,9 @@ export const documentsApi = {
           throw new Error(response.data.message || 'Processing failed');
         }
 
-
+        timeInterval= timeInterval * 2;
         attempts++;
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, timeInterval));
       } catch (error) {
         throw error;
       }
