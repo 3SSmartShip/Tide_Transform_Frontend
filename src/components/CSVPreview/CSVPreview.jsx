@@ -5,90 +5,93 @@ import { motion } from "framer-motion";
 
 export default function CSVPreview({ data }) {
   const [downloading, setDownloading] = useState(false);
-  const result = []; // Define result array at component level
+  const result = [];
 
   const processInvoiceData = (obj) => {
     const result = [];
 
-    // Helper function to combine pages data
-    const combinePages = (data) => {
-      const allItems = [];
-      let invoiceDetails = null;
+    if (obj?.data?.data) {
+      // Process each page
+      Object.entries(obj.data.data).forEach(([pageKey, pageData]) => {
+        if (pageKey.startsWith("page_")) {
+          const pageNumber = parseInt(pageKey.split("_")[1]) + 1;
 
-      Object.entries(data).forEach(([key, page]) => {
-        if (key.startsWith("page_")) {
-          // Use the first page for invoice details
-          if (!invoiceDetails) {
-            invoiceDetails = page;
+          // Add page header
+          result.push({ Key: `Page ${pageNumber}`, Value: "" });
+
+          // Add Invoice Header details
+          result.push({ Key: "Invoice Details", Value: "" });
+          result.push({ Key: "Customer", Value: pageData.customer || "N/A" });
+          result.push({ Key: "Date", Value: pageData.date || "N/A" });
+          result.push({
+            Key: "Invoice Number",
+            Value: pageData.invoice_no || "N/A",
+          });
+          result.push({
+            Key: "Order Number",
+            Value: pageData.order_no || "N/A",
+          });
+          result.push({ Key: "Currency", Value: pageData.currency || "N/A" });
+
+          // Add items from this page
+          if (pageData.items && pageData.items.length > 0) {
+            result.push({ Key: "", Value: "" }); // Empty line for spacing
+            result.push({ Key: `Items - Page ${pageNumber}`, Value: "" });
+
+            pageData.items.forEach((item, index) => {
+              const itemDetails = [
+                `Description: ${item.description || "N/A"}`,
+                `Part No: ${item.part_no || "N/A"}`,
+                `Quantity: ${item.quantity || "0"}`,
+                `Unit Price: ${item.unit_price || "0"} ${
+                  item.currency || pageData.currency || "N/A"
+                }`,
+                `Total Price: ${item.total_price || "0"} ${
+                  item.currency || pageData.currency || "N/A"
+                }`,
+              ].join(" | ");
+
+              result.push({
+                Key: `Item ${index + 1}`,
+                Value: itemDetails,
+              });
+            });
           }
-          // Combine items from all pages
-          if (page.items) {
-            allItems.push(...page.items);
+
+          // Add Invoice Summary
+          result.push({ Key: "", Value: "" }); // Empty line for spacing
+          result.push({ Key: "Invoice Summary", Value: "" });
+          result.push({ Key: "Discount", Value: pageData.discount || "0" });
+          result.push({
+            Key: "Total Amount",
+            Value: `${pageData.total_amount || "0"} ${
+              pageData.currency || "N/A"
+            }`,
+          });
+
+          // Add Payment Instructions
+          if (pageData.payment_instructions) {
+            result.push({ Key: "", Value: "" }); // Empty line for spacing
+            result.push({ Key: "Payment Instructions", Value: "" });
+            result.push({
+              Key: "Company Name",
+              Value: pageData.payment_instructions.company_name || "N/A",
+            });
+            result.push({
+              Key: "Bank Name",
+              Value: pageData.payment_instructions.bank_name || "N/A",
+            });
+            result.push({
+              Key: "Account Number",
+              Value: pageData.payment_instructions.account_no || "N/A",
+            });
+            result.push({
+              Key: "Swift Code",
+              Value: pageData.payment_instructions.swift_code || "N/A",
+            });
           }
         }
       });
-
-      return { ...invoiceDetails, items: allItems };
-    };
-
-    if (obj?.data?.data) {
-      const invoiceData = combinePages(obj.data.data);
-
-      // Invoice Header Information
-      result.push({ Key: "Invoice Details", Value: "" });
-      result.push({ Key: "Customer", Value: invoiceData.customer || "N/A" });
-      result.push({ Key: "Date", Value: invoiceData.date || "N/A" });
-      result.push({
-        Key: "Invoice Number",
-        Value: invoiceData.invoice_no || "N/A",
-      });
-      result.push({
-        Key: "Order Number",
-        Value: invoiceData.order_no || "N/A",
-      });
-
-      // Items Header
-      result.push({ Key: "", Value: "" }); // Empty line for spacing
-      result.push({
-        Key: "Items",
-        Value:
-          "Part No. | Description | Quantity | Unit Price | Currency | Total Price",
-      });
-
-      // Items Details
-      invoiceData.items.forEach((item, index) => {
-        result.push({
-          Key: `Item ${index + 1}`,
-          Value: `${item.part_no} | ${item.description} | ${item.quantity} | ${item.unit_price} | ${item.currency} | ${item.total_price}`,
-        });
-      });
-
-      // Summary
-      result.push({ Key: "", Value: "" }); // Empty line for spacing
-      result.push({ Key: "Summary", Value: "" });
-      result.push({
-        Key: "Discount",
-        Value: `${invoiceData.currency} ${invoiceData.discount}`,
-      });
-      result.push({
-        Key: "Total Amount",
-        Value: `${invoiceData.currency} ${invoiceData.total_amount}`,
-      });
-
-      // Payment Instructions
-      result.push({ Key: "", Value: "" }); // Empty line for spacing
-      result.push({ Key: "Payment Instructions", Value: "" });
-      const payment = invoiceData.payment_instructions;
-      result.push({
-        Key: "Company Name",
-        Value: payment.company_name || "N/A",
-      });
-      result.push({ Key: "Bank Name", Value: payment.bank_name || "N/A" });
-      result.push({
-        Key: "Account Number",
-        Value: payment.account_no || "N/A",
-      });
-      result.push({ Key: "Swift Code", Value: payment.swift_code || "N/A" });
     }
 
     return result;
@@ -97,7 +100,7 @@ export default function CSVPreview({ data }) {
   const processData = (obj) => {
     const documentType = obj?.data?.data?.page_0?.type;
 
-    if (documentType === "invoice") {
+    if (!documentType || documentType === "invoice") {
       return processInvoiceData(obj);
     } else {
       // Clear the result array before processing
@@ -107,7 +110,9 @@ export default function CSVPreview({ data }) {
         return key
           .replace(/_/g, " ")
           .split(" ")
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .map(
+            (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          )
           .join(" ");
       };
 
@@ -116,7 +121,10 @@ export default function CSVPreview({ data }) {
         if (pageKey.startsWith("page_")) {
           // Add page header
           result.push({ Key: "", Value: "" }); // Empty line for spacing
-          result.push({ Key: `Page ${parseInt(pageKey.split('_')[1]) + 1}`, Value: "" });
+          result.push({
+            Key: `Page ${parseInt(pageKey.split("_")[1]) + 1}`,
+            Value: "",
+          });
 
           // Process assemblies for this page
           if (pageData.assembly && pageData.assembly.length > 0) {
@@ -124,13 +132,22 @@ export default function CSVPreview({ data }) {
           }
 
           // Process spare parts for this page
-          if (pageData.spare_parts_information && pageData.spare_parts_information.length > 0) {
+          if (
+            pageData.spare_parts_information &&
+            pageData.spare_parts_information.length > 0
+          ) {
             processSparePartsInfo(pageData.spare_parts_information, pageKey);
           }
 
           // Process manufacturer details for this page
-          if (pageData.manufacturer_contact_details && pageData.manufacturer_contact_details.length > 0) {
-            processManufacturerDetails(pageData.manufacturer_contact_details, pageKey);
+          if (
+            pageData.manufacturer_contact_details &&
+            pageData.manufacturer_contact_details.length > 0
+          ) {
+            processManufacturerDetails(
+              pageData.manufacturer_contact_details,
+              pageKey
+            );
           }
         }
       });
@@ -222,8 +239,12 @@ export default function CSVPreview({ data }) {
       spareParts.forEach((part, index) => {
         result.push({
           Key: `Spare Part ${index + 1}`,
-          Value: `${part.description} (${part.part_number}) - Qty: ${part.quantity_in_stock}${
-            part.compatibility !== "N/A" ? ` - Compatibility: ${part.compatibility}` : ""
+          Value: `${part.description} (${part.part_number}) - Qty: ${
+            part.quantity_in_stock
+          }${
+            part.compatibility !== "N/A"
+              ? ` - Compatibility: ${part.compatibility}`
+              : ""
           }${part.price ? ` - Price: ${part.price}` : ""}`,
         });
       });
@@ -236,7 +257,9 @@ export default function CSVPreview({ data }) {
       manufacturers.forEach((mfg, index) => {
         result.push({
           Key: `Manufacturer ${index + 1}`,
-          Value: `${mfg.manufacturer_name} - Address: ${mfg.address} - Phone: ${mfg.phone} - Email: ${mfg.email}${
+          Value: `${mfg.manufacturer_name} - Address: ${mfg.address} - Phone: ${
+            mfg.phone
+          } - Email: ${mfg.email}${
             mfg.website !== "N/A" ? ` - Website: ${mfg.website}` : ""
           }`,
         });
@@ -248,32 +271,32 @@ export default function CSVPreview({ data }) {
     setDownloading(true);
     try {
       const processedData = processData(data);
-      
+
       if (!processedData || processedData.length === 0) {
-        throw new Error('No data to export');
+        throw new Error("No data to export");
       }
 
       const csvData = [
         ["Field Name", "Content"],
-        ...processedData.map(item => [item.Key, item.Value])
+        ...processedData.map((item) => [item.Key, item.Value]),
       ];
 
       const csv = Papa.unparse(csvData, {
         quotes: true,
-        delimiter: ',',
+        delimiter: ",",
         header: true,
-        newline: '\r\n',
+        newline: "\r\n",
       });
 
-      const BOM = '\uFEFF';
-      const blob = new Blob([BOM + csv], { 
-        type: "text/csv;charset=utf-8;" 
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csv], {
+        type: "text/csv;charset=utf-8;",
       });
-      
+
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
-      const timestamp = new Date().toISOString().split('T')[0];
-      const documentType = data?.data?.data?.page_0?.type || 'document';
+      const timestamp = new Date().toISOString().split("T")[0];
+      const documentType = data?.data?.data?.page_0?.type || "document";
 
       link.setAttribute("href", url);
       link.setAttribute("download", `${documentType}_data_${timestamp}.csv`);
