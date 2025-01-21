@@ -17,6 +17,7 @@ import {
   Copy,
   Trash2,
   ChevronDown,
+  Check,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../Layout/Layout";
@@ -84,7 +85,8 @@ export default function Dashboard() {
   const [overviewPeriod, setOverviewPeriod] = useState("weekly");
   const [recentDocuments, setRecentDocuments] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
-  const [documentsLoading, setDocumentsLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [copiedDoc, setCopiedDoc] = useState(null);
 
   const navigate = useNavigate();
 
@@ -367,6 +369,7 @@ export default function Dashboard() {
   const handleCopy = async (fileName) => {
     try {
       await navigator.clipboard.writeText(fileName);
+      setCopiedDoc(fileName);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -391,29 +394,19 @@ export default function Dashboard() {
     const fetchRecentDocuments = async () => {
       try {
         setDocumentsLoading(true);
-        const docs = await documentHistoryService.getDocumentHistory({
-          type: "3S_AI", // Match the type from AllDocuments.jsx
+        const response = await documentHistoryService.getDocumentHistory({
+          type: "3S_AI",
           page: 1,
           limit: 3, // Only get first 3 documents
-          sortBy: "dateAdded",
-          sortOrder: "desc",
         });
 
-        if (!docs) {
+        if (!response.documents || response.documents.length === 0) {
           console.log("No documents found");
           setRecentDocuments([]);
           return;
         }
 
-        // Format the documents to match the table structure
-        const formattedDocs = docs.map((doc) => ({
-          fileName: doc.fileName,
-          pages: doc.pages,
-          status: doc.status || "pending",
-          dateAdded: doc.dateAdded,
-        }));
-
-        setRecentDocuments(formattedDocs);
+        setRecentDocuments(response.documents);
       } catch (error) {
         console.error("Failed to fetch recent documents:", error);
       } finally {
@@ -658,73 +651,100 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Document History */}
-        <div className="bg-zinc-900 rounded-lg overflow-hidden">
-          <div className="p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
-              <h2 className="text-xl font-semibold text-white">
-                Recent Documents
-              </h2>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleViewAllDocuments}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                View All Documents
-              </motion.button>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-zinc-900 rounded-lg overflow-hidden text-white text-sm"
+        {/* Recent Documents Section */}
+        <div className="bg-zinc-900 rounded-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-white">
+              Recent Documents
+            </h2>
+            <button
+              onClick={() => navigate("/dashboard/documents")}
+              className="text-blue-500 hover:text-blue-400 text-sm"
             >
-              {documentsLoading ? (
-                <DocumentLoadingSkeleton />
-              ) : recentDocuments.length === 0 ? (
-                <div className="p-8 text-center">No documents found</div>
-              ) : (
-                <table className="w-full">
-                  <thead className="bg-zinc-800">
-                    <tr>
-                      <th className="px-6 py-4 text-left">File Name</th>
-                      <th className="px-6 py-4 text-left">Pages</th>
-                      <th className="px-6 py-4 text-left">Status</th>
-                      <th className="px-6 py-4 text-left">Date Added</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentDocuments.map((doc, index) => (
-                      <motion.tr
-                        key={doc.fileName}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="border-b border-zinc-800 hover:bg-zinc-800/50"
-                      >
-                        <td className="px-6 py-4">{doc.fileName}</td>
-                        <td className="px-6 py-4">{doc.pages}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              doc.status === "completed"
-                                ? "bg-green-500/20 text-green-500"
-                                : doc.status === "processing"
-                                ? "bg-yellow-500/20 text-yellow-500"
-                                : "bg-red-500/20 text-red-500"
-                            }`}
-                          >
-                            {doc.status || "pending"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">{doc.dateAdded}</td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </motion.div>
+              View All
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            {documentsLoading ? (
+              // Loading skeleton for table
+              <div className="w-full">
+                {[1, 2, 3].map((index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{
+                      opacity: [0.4, 0.7, 0.4],
+                      y: 0,
+                    }}
+                    transition={{
+                      opacity: {
+                        repeat: Infinity,
+                        duration: 1.5,
+                        ease: "easeInOut",
+                      },
+                      y: {
+                        duration: 0.4,
+                        delay: index * 0.1,
+                      },
+                    }}
+                    className="border-b border-zinc-800"
+                  >
+                    <div className="px-6 py-4 flex items-center space-x-8">
+                      <div className="h-4 w-48 bg-zinc-800 rounded"></div>
+                      <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+                      <div className="h-4 w-24 bg-zinc-800 rounded"></div>
+                      <div className="h-4 w-32 bg-zinc-800 rounded"></div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : recentDocuments.length === 0 ? (
+              <div className="text-center text-gray-400 py-8">
+                No recent documents found
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-zinc-800 text-white">
+                  <tr>
+                    <th className="px-6 py-4 text-left">File Name</th>
+                    <th className="px-6 py-4 text-left">Pages</th>
+                    <th className="px-6 py-4 text-left">Status</th>
+                    <th className="px-6 py-4 text-left">Date Added</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentDocuments.map((doc, index) => (
+                    <motion.tr
+                      key={doc.fileName}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border-b border-zinc-800 hover:bg-zinc-800/50"
+                    >
+                      <td className="px-6 py-4 text-white">{doc.fileName}</td>
+                      <td className="px-6 py-4 text-white">
+                        {doc.transforms?.[0]?.pages || doc.pages || "N/A"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            doc.status === "completed"
+                              ? "bg-green-500/20 text-green-500"
+                              : doc.status === "processing"
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : "bg-red-500/20 text-red-500"
+                          }`}
+                        >
+                          {doc.status || "pending"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-white">{doc.dateAdded}</td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
