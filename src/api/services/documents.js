@@ -26,11 +26,11 @@ export const documentsApi = {
   // Internal method to poll status
   async pollStatus(jobId, onStatusUpdate) {
     let status = 'pending';
-    const maxAttempts = 30;
-    let timeInterval = 2000;
+    // const maxAttempts = 30;
+    let timeInterval = 5000;
     let attempts = 0;
 
-    while (status === 'pending' && attempts < maxAttempts) {
+    while (status === 'pending' ) {
       try {
         const response = await api.get(`/api/v1/transform/status/${jobId}`);
         status = response.data.status;
@@ -41,7 +41,6 @@ export const documentsApi = {
           throw new Error(response.data.message || 'Processing failed');
         }
 
-        timeInterval = timeInterval * 2;
         attempts++;
         await new Promise(resolve => setTimeout(resolve, timeInterval));
       } catch (error) {
@@ -66,7 +65,7 @@ export const documentsApi = {
     } catch (error) {
       // Format error with status code
       throw new Error(JSON.stringify({
-        status: error.response?.status || 500,
+        status: error.response?.status,
         message: error.response?.data?.message || error.message || 'An error occurred'
       }));
     }

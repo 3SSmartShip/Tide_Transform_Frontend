@@ -919,6 +919,18 @@ export default function Upload() {
   const [pageNumbers, setPageNumbers] = useState("");
   const [isPageNumberComplete, setIsPageNumberComplete] = useState(false);
 
+  // Simple cube rotation animation
+  const cubeRotation = {
+    animate: {
+      rotate: 360,
+      transition: {
+        duration: 1,
+        repeat: Infinity,
+        ease: "linear",
+      },
+    },
+  };
+
   const handleInvoiceUpload = async () => {
     if (invoiceFiles.length === 0) {
       setInvoiceError("Please select a file to transform");
@@ -1184,10 +1196,15 @@ export default function Upload() {
             setManualError(null);
             setPdfUrl(null);
           }}
+          disabled={invoiceLoading || manualLoading}
           className={`px-6 py-2 rounded-md transition-colors ${
             selectedMode === "invoice"
               ? "bg-[#2563EB] text-white font-medium"
               : "text-gray-400 hover:text-white"
+          } ${
+            invoiceLoading || manualLoading
+              ? "opacity-50 cursor-not-allowed pointer-events-none"
+              : ""
           }`}
         >
           Invoices/RFQs
@@ -1200,10 +1217,15 @@ export default function Upload() {
             setInvoiceError(null);
             setPdfUrl(null);
           }}
+          disabled={invoiceLoading || manualLoading}
           className={`px-6 py-2 rounded-md transition-colors ${
             selectedMode === "manual"
               ? "bg-[#2563EB] text-white font-medium"
               : "text-gray-400 hover:text-white"
+          } ${
+            invoiceLoading || manualLoading
+              ? "opacity-50 cursor-not-allowed pointer-events-none"
+              : ""
           }`}
         >
           Manuals
@@ -1367,10 +1389,9 @@ export default function Upload() {
           )}
         </AnimatePresence>
 
+        {/* Transform Button - Moved Up */}
         <div className="flex justify-end">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={
               selectedMode === "invoice"
                 ? handleInvoiceUpload
@@ -1380,77 +1401,29 @@ export default function Upload() {
               (selectedMode === "invoice"
                 ? invoiceFiles.length === 0
                 : manualFiles.length === 0 || !isPageNumberComplete) ||
-              (selectedMode === "invoice" ? invoiceLoading : manualLoading)
+              invoiceLoading ||
+              manualLoading
             }
             className="mt-6 w-full max-w-xs bg-[#2563EB] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 text-m"
           >
-            {selectedMode === "invoice"
-              ? invoiceLoading
-                ? "Transforming..."
-                : "Transform Document"
-              : manualLoading
+            {invoiceLoading || manualLoading
               ? "Transforming..."
+              : selectedMode === "invoice"
+              ? "Transform Document"
               : "Transform Manuals"}
-          </motion.button>
+          </button>
         </div>
 
+        {/* Loading Display - Moved Below Button */}
         {(invoiceLoading || manualLoading) && (
-          <motion.div
-            className="relative flex flex-col items-center mt-8 mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            {/* Progress Bar Container */}
-            <div className="w-full max-w-md h-4 bg-gray-700 rounded-full overflow-hidden mb-4">
-              <motion.div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                variants={progressBarVariants}
-                initial="initial"
-                animate="animate"
-                custom={parseFloat(jobStatus?.percentage || "0")}
-              />
-            </div>
-
-            {/* Progress Text */}
+          <div className="flex flex-col items-center justify-center mt-8 mb-8">
             <motion.div
-              variants={progressTextVariants}
-              initial="initial"
+              className="w-16 h-16 bg-blue-500 rounded-lg"
               animate="animate"
-              className="text-center"
-            >
-              <motion.p
-                className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                {jobStatus?.operation || "Processing"}
-              </motion.p>
-              <p className="text-gray-500 mt-2">
-                {jobStatus?.percentage || "0%"} Complete
-              </p>
-            </motion.div>
-
-            {/* Particle effects */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-3 h-3 bg-blue-500 rounded-full"
-                custom={i}
-                variants={particleVariants}
-                animate="animate"
-                style={{
-                  left: "50%",
-                  top: "50%",
-                }}
-              />
-            ))}
-
-            <motion.div
-              className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500"
-              variants={loadingVariants}
-              animate="animate"
+              variants={cubeRotation}
             />
-          </motion.div>
+            <p className="mt-4 text-lg text-gray-300">Processing...</p>
+          </div>
         )}
 
         <AnimatePresence mode="wait">
