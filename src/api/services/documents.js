@@ -64,7 +64,11 @@ export const documentsApi = {
       onStatusUpdate?.('Processing started...');
       return await this.pollStatus(uploadResponse.data.jobId, onStatusUpdate);
     } catch (error) {
-      throw error;
+      // Format error with status code
+      throw new Error(JSON.stringify({
+        status: error.response?.status || 500,
+        message: error.response?.data?.message || error.message || 'An error occurred'
+      }));
     }
   },
 
@@ -106,8 +110,11 @@ export const documentsApi = {
       onStatusUpdate?.({ operation: 'Processing started...', percentage: '0%' });
       return await this.pollStatus(uploadResponse.data.jobId, onStatusUpdate);
     } catch (error) {
-      console.error('Manual processing error:', error);
-      throw error;
+      // Format error with status code
+      throw new Error(JSON.stringify({
+        status: error.response?.status || 500,
+        message: error.response?.data?.message || error.message || 'An error occurred'
+      }));
     }
   }
 };
