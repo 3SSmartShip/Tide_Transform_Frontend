@@ -26,14 +26,22 @@ export const documentsApi = {
   // Internal method to poll status
   async pollStatus(jobId, onStatusUpdate) {
     let status = 'pending';
-    // const maxAttempts = 30;
     let timeInterval = 5000;
     let attempts = 0;
 
-    while (status === 'pending' ) {
+    while (status === 'pending') {
       try {
         const response = await api.get(`/api/v1/transform/status/${jobId}`);
         status = response.data.status;
+
+        // Log and pass the status update to callback
+        if (response.data.operation && response.data.percentage) {
+          console.log(`Operation: ${response.data.operation}, Progress: ${response.data.percentage}`);
+          onStatusUpdate?.({
+            operation: response.data.operation,
+            percentage: response.data.percentage
+          });
+        }
 
         if (status === 'completed') {
           return response.data.data;
