@@ -13,6 +13,7 @@ import {
   PDFDownloadLink,
 } from "@react-pdf/renderer";
 import { jsonToPlainText } from "json-to-plain-text";
+import CSVPreview from "../CSVPreview/CSVPreview";
 
 // Enhanced styles with better structure
 const styles = StyleSheet.create({
@@ -572,7 +573,7 @@ const PDFPreview = ({ data }) => {
 
   return (
     <div className="mt-4">
-      <h3 className="text-lg font-semibold text-white mb-2">PDF Preview</h3>
+      <h3 className="text-lg font-semibold text-white mb-2">Preview</h3>
       <div className="p-4 rounded">
         <PDFDownloadLink
           document={
@@ -586,7 +587,7 @@ const PDFPreview = ({ data }) => {
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
           {({ loading }) =>
-            loading ? "Generating PDF..." : "Download Document"
+            loading ? "Generating PDF..." : "Download Pdf"
           }
         </PDFDownloadLink>
       </div>
@@ -1471,7 +1472,10 @@ export default function Upload() {
                     transition={{ duration: 0.5 }}
                     className="border-b border-gray-700 pb-6"
                   >
-                    <PDFPreview data={getCurrentData()} />
+                        <div className="flex flex-row items-center gap-4 mb-4">
+                          <PDFPreview data={getCurrentData()} />
+                          <CSVPreview data={getCurrentData()} />
+                        </div>
                   </motion.div>
                 )}
 
