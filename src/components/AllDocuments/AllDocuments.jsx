@@ -1,20 +1,22 @@
 "use client";
-
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Filter, Trash2, Copy, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Layout from "../Layout/Layout";
 import { documentHistoryService } from "@/api/services/documentHistory";
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css'; // Dark theme
-import 'prismjs/components/prism-json'; // JSON syntax support
+import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css"; // Dark theme
+import "prismjs/components/prism-json"; // JSON syntax support
 
 export default function DocumentTable() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDocuments, setTotalDocuments] = useState(0);
+  const itemsPerPage = 10;
 
   const [sortField, setSortField] = useState("dateAdded");
   const [isAsc, setIsAsc] = useState(true);
@@ -26,7 +28,7 @@ export default function DocumentTable() {
 
   useEffect(() => {
     fetchDocuments();
-  }, [page]);
+  }, [currentPage]);
 
   useEffect(() => {
     if (expandedRow) {
@@ -39,22 +41,18 @@ export default function DocumentTable() {
       setLoading(true);
       setError(null);
 
-      const docs = await documentHistoryService.getDocumentHistory({
+      const response = await documentHistoryService.getDocumentHistory({
         type: "3S_AI",
-        page,
-        limit,
+        page: currentPage,
+        limit: itemsPerPage,
       });
 
-      if (!docs) {
-        setError("No documents found");
-        return;
-      }
-
-      setDocuments(docs);
+      setDocuments(response.documents);
+      setTotalPages(response.totalPages);
+      setTotalDocuments(response.totalDocuments);
     } catch (error) {
       console.error("Failed to fetch documents:", error);
       if (error.response?.status === 401) {
-        // Handle unauthorized error
         window.location.href = "/login";
       } else {
         setError("Failed to fetch documents. Please try again later.");
@@ -75,7 +73,8 @@ export default function DocumentTable() {
 
   const handleCopy = async (doc) => {
     try {
-      const jsonString = JSON.stringify(doc.response, null, 2);
+      const jsonData = doc.transforms?.[0]?.response || {};
+      const jsonString = JSON.stringify(jsonData, null, 2);
       await navigator.clipboard.writeText(jsonString);
       setCopiedDoc(doc.fileName);
       setTimeout(() => {
@@ -86,12 +85,8 @@ export default function DocumentTable() {
     }
   };
 
-  const handleDropdown = (fileName) => {
-    if (expandedRow === fileName) {
-      setExpandedRow(null);
-    } else {
-      setExpandedRow(fileName);
-    }
+  const handleDropdown = (docId) => {
+    setExpandedRow(expandedRow === docId ? null : docId);
   };
 
   const sortedDocuments = [...documents].sort((a, b) => {
@@ -103,6 +98,10 @@ export default function DocumentTable() {
     }
     return aValue < bValue ? 1 : -1;
   });
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   const LoadingSkeleton = () => (
     <motion.div
@@ -240,102 +239,180 @@ export default function DocumentTable() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedDocuments.map((doc, index) => (
-                    <>
-                      <motion.tr
-                        key={doc.fileName}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="border-b border-zinc-800 hover:bg-zinc-800/50"
-                      >
-                        <td className="px-6 py-4">{doc.fileName}</td>
-                        <td className="px-6 py-4">{doc.pages}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              doc.status === "completed"
-                                ? "bg-green-500/20 text-green-500"
-                                : doc.status === "processing"
-                                ? "bg-yellow-500/20 text-yellow-500"
-                                : "bg-red-500/20 text-red-500"
-                            }`}
-                          >
-                            {doc.status || "pending"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">{doc.dateAdded}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              className="p-2 hover:bg-zinc-700 rounded-full relative"
-                              onClick={() => handleCopy(doc)}
+                  {documents.map((doc, index) => {
+                    const docId = `${doc.fileName}_${index}`;
+                    const jsonData = doc.transforms?.[0]?.response || {};
+
+                    return (
+                      <React.Fragment key={docId}>
+                        <motion.tr
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="border-b border-zinc-800 hover:bg-zinc-800/50"
+                        >
+                          <td className="px-6 py-4">{doc.fileName}</td>
+                          <td className="px-6 py-4">
+                            {doc.transforms?.[0]?.pages || doc.pages || "N/A"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                doc.status === "completed"
+                                  ? "bg-green-500/20 text-green-500"
+                                  : doc.status === "processing"
+                                  ? "bg-yellow-500/20 text-yellow-500"
+                                  : "bg-red-500/20 text-red-500"
+                              }`}
                             >
-                              <AnimatePresence mode="wait">
-                                {copiedDoc === doc.fileName ? (
-                                  <motion.div
-                                    key="check"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    className="text-green-500"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </motion.div>
-                                ) : (
-                                  <motion.div
-                                    key="copy"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              className="p-2 hover:bg-zinc-700 rounded-full"
-                              onClick={() => handleDropdown(doc.fileName)}
-                            >
-                              <ChevronDown
-                                className={`w-4 h-4 transition-transform ${
-                                  expandedRow === doc.fileName
-                                    ? "rotate-180"
-                                    : ""
-                                }`}
-                              />
-                            </motion.button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                      {expandedRow === doc.fileName && (
-                        <tr className="bg-zinc-800/30">
-                          <td colSpan="5" className="px-6 py-4">
-                            <div className="overflow-x-auto rounded-lg bg-[#1E1E1E] p-4">
-                              <pre className="language-json">
-                                <code
-                                  ref={el => jsonRef.current[doc.fileName] = el}
-                                  className="text-sm whitespace-pre-wrap break-words"
-                                >
-                                  {JSON.stringify(doc.response, null, 2)}
-                                </code>
-                              </pre>
+                              {doc.status || "pending"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">{doc.dateAdded}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-end gap-2">
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                className="p-2 hover:bg-zinc-700 rounded-full relative"
+                                onClick={() => handleCopy(doc)}
+                              >
+                                <AnimatePresence mode="wait">
+                                  {copiedDoc === doc.fileName ? (
+                                    <motion.div
+                                      key="check"
+                                      initial={{ opacity: 0, scale: 0.8 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      exit={{ opacity: 0, scale: 0.8 }}
+                                      className="text-green-500"
+                                    >
+                                      <Check className="w-4 h-4" />
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div
+                                      key="copy"
+                                      initial={{ opacity: 0, scale: 0.8 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      exit={{ opacity: 0, scale: 0.8 }}
+                                    >
+                                      <Copy className="w-4 h-4" />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                className="p-2 hover:bg-zinc-700 rounded-full"
+                                onClick={() => handleDropdown(docId)}
+                              >
+                                <ChevronDown
+                                  className={`w-4 h-4 transition-transform ${
+                                    expandedRow === docId ? "rotate-180" : ""
+                                  }`}
+                                />
+                              </motion.button>
                             </div>
                           </td>
-                        </tr>
-                      )}
-                    </>
-                  ))}
+                        </motion.tr>
+                        {expandedRow === docId && (
+                          <tr className="bg-zinc-800/30">
+                            <td colSpan="5" className="px-6 py-4">
+                              <div className="overflow-x-auto rounded-lg bg-[#1E1E1E] p-4">
+                                <pre className="language-json">
+                                  <code
+                                    ref={(el) => (jsonRef.current[docId] = el)}
+                                    className="text-sm whitespace-pre-wrap break-words"
+                                  >
+                                    {JSON.stringify(jsonData, null, 2)}
+                                  </code>
+                                </pre>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
           </motion.div>
         </div>
+      </div>
+
+      {/* Updated Pagination Controls */}
+      <div className="flex justify-center items-center gap-2 mt-4 pb-4">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 rounded-md bg-zinc-800 text-white disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        {totalPages <= 7 ? (
+          // Show all pages if total pages are 7 or less
+          [...Array(totalPages)].map((_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => handlePageChange(index + 1)}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === index + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-zinc-800 text-white hover:bg-zinc-700"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))
+        ) : (
+          // Show pagination with ellipsis for more than 7 pages
+          <>
+            {[...Array(3)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <span className="px-2">...</span>
+            {[...Array(3)].map((_, index) => (
+              <button
+                key={totalPages - 2 + index}
+                onClick={() => handlePageChange(totalPages - 2 + index)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === totalPages - 2 + index
+                    ? "bg-blue-500 text-white"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700"
+                }`}
+              >
+                {totalPages - 2 + index}
+              </button>
+            ))}
+          </>
+        )}
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 rounded-md bg-zinc-800 text-white disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* Updated Items per page info */}
+      <div className="text-center text-sm text-zinc-400 pb-4">
+        Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+        {Math.min(currentPage * itemsPerPage, totalDocuments)} of{" "}
+        {totalDocuments} entries
       </div>
     </Layout>
   );
