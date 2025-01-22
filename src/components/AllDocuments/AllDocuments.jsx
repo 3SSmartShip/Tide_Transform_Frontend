@@ -19,7 +19,7 @@ export default function DocumentTable() {
   const itemsPerPage = 10;
 
   const [sortField, setSortField] = useState("dateAdded");
-  const [isAsc, setIsAsc] = useState(true);
+  const [isAsc, setIsAsc] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [copiedDoc, setCopiedDoc] = useState(null);
@@ -67,7 +67,7 @@ export default function DocumentTable() {
       setIsAsc(!isAsc);
     } else {
       setSortField(field);
-      setIsAsc(true);
+      setIsAsc(false);
     }
   };
 
@@ -92,6 +92,12 @@ export default function DocumentTable() {
   const sortedDocuments = [...documents].sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
+
+    if (sortField === "dateAdded") {
+      const dateA = new Date(aValue);
+      const dateB = new Date(bValue);
+      return isAsc ? dateA - dateB : dateB - dateA;
+    }
 
     if (isAsc) {
       return aValue > bValue ? 1 : -1;
@@ -239,7 +245,7 @@ export default function DocumentTable() {
                   </tr>
                 </thead>
                 <tbody>
-                  {documents.map((doc, index) => {
+                  {sortedDocuments.map((doc, index) => {
                     const docId = `${doc.fileName}_${index}`;
                     const jsonData = doc.transforms?.[0]?.response || {};
 
