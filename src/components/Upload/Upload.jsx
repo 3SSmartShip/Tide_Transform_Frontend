@@ -586,9 +586,7 @@ const PDFPreview = ({ data }) => {
           fileName={fileName}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          {({ loading }) =>
-            loading ? "Generating PDF..." : "Download Pdf"
-          }
+          {({ loading }) => (loading ? "Generating PDF..." : "Download Pdf")}
         </PDFDownloadLink>
       </div>
     </div>
@@ -617,6 +615,70 @@ const ManualPDF = ({ jsonData }) => {
     );
 
   if (!pages.length) return null;
+
+  const renderSubassemblyParts = (assembly) => {
+    return assembly.subassembly.map((subassembly, index) => {
+      const { part_number, name, quantity, parts } = subassembly;
+
+      return (
+        <div key={index} className="bg-gray-800 p-4 rounded-md mb-4">
+          <h3 className="text-lg font-semibold text-white">
+            Subassembly Details
+          </h3>
+          <div className="text-gray-400">
+            <p>
+              <strong>Part Number:</strong> {part_number || "N/A"}
+            </p>
+            <p>
+              <strong>Name:</strong> {name || "N/A"}
+            </p>
+            <p>
+              <strong>Quantity:</strong> {quantity || "N/A"}
+            </p>
+          </div>
+          <h4 className="text-md font-semibold text-white mt-4">Parts:</h4>
+          {parts && parts.length > 0 ? (
+            <table className="min-w-full mt-2">
+              <thead className="bg-gray-700">
+                <tr>
+                  <th className="px-4 py-2 text-left text-white">
+                    Part Number
+                  </th>
+                  <th className="px-4 py-2 text-left text-white">Name</th>
+                  <th className="px-4 py-2 text-left text-white">Quantity</th>
+                  <th className="px-4 py-2 text-left text-white">Material</th>
+                  <th className="px-4 py-2 text-left text-white">Weight</th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-800">
+                {parts.map((part, index) => (
+                  <tr key={index} className="border-b border-gray-600">
+                    <td className="px-4 py-2 text-gray-300">
+                      {part.part_number || "N/A"}
+                    </td>
+                    <td className="px-4 py-2 text-gray-300">
+                      {part.name || "N/A"}
+                    </td>
+                    <td className="px-4 py-2 text-gray-300">
+                      {part.quantity || "N/A"}
+                    </td>
+                    <td className="px-4 py-2 text-gray-300">
+                      {part.material || "N/A"}
+                    </td>
+                    <td className="px-4 py-2 text-gray-300">
+                      {part.weight || "N/A"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-gray-400">No parts available.</p>
+          )}
+        </div>
+      );
+    });
+  };
 
   return (
     <Document>
@@ -750,22 +812,7 @@ const ManualPDF = ({ jsonData }) => {
                   {assembly.subassembly && assembly.subassembly.length > 0 && (
                     <View style={pdfStyles.subsection}>
                       <Text style={pdfStyles.subheader}>Subassembly</Text>
-                      {assembly.subassembly.map((sub, subIndex) => (
-                        <View key={subIndex} style={pdfStyles.subassemblyItem}>
-                          {Object.entries(sub).map(
-                            ([key, value], entryIndex) => (
-                              <View key={entryIndex} style={pdfStyles.row}>
-                                <Text style={pdfStyles.label}>{key}:</Text>
-                                <Text style={pdfStyles.value}>
-                                  {typeof value === "object"
-                                    ? JSON.stringify(value)
-                                    : value || "N/A"}
-                                </Text>
-                              </View>
-                            )
-                          )}
-                        </View>
-                      ))}
+                      {renderSubassemblyParts(assembly)}
                     </View>
                   )}
                 </View>
@@ -1472,10 +1519,10 @@ export default function Upload() {
                     transition={{ duration: 0.5 }}
                     className="border-b border-gray-700 pb-6"
                   >
-                        <div className="flex flex-row items-center gap-4 mb-4">
-                          <PDFPreview data={getCurrentData()} />
-                          <CSVPreview data={getCurrentData()} />
-                        </div>
+                    <div className="flex flex-row items-center gap-4 mb-4">
+                      <PDFPreview data={getCurrentData()} />
+                      <CSVPreview data={getCurrentData()} />
+                    </div>
                   </motion.div>
                 )}
 
