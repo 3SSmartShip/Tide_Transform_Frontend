@@ -1014,6 +1014,9 @@ export default function Upload() {
         setInvoiceFiles([]);
         setInvoiceSuccessMessage("Invoice transformed successfully!");
         setPdfUrl(true);
+        // Reset states after successful upload
+        setPageNumbers("");
+        setIsPageNumberComplete(false);
       }
     } catch (error) {
       console.error("Transform error:", error);
@@ -1084,6 +1087,9 @@ export default function Upload() {
         setManualFiles([]);
         setManualSuccessMessage("Manual processed successfully!");
         setPdfUrl(true);
+        // Reset states after successful upload
+        setPageNumbers("");
+        setIsPageNumberComplete(false);
       }
     } catch (error) {
       console.error("Manual processing error:", error);
@@ -1114,6 +1120,9 @@ export default function Upload() {
         setManualError(null);
         setManualSuccessMessage("");
         setManualParsedData(null);
+        // Reset page number state when new file is uploaded
+        setPageNumbers("");
+        setIsPageNumberComplete(false);
       }
       setPdfUrl(null);
     }
@@ -1133,6 +1142,9 @@ export default function Upload() {
         setManualError(null);
         setManualSuccessMessage("");
         setManualParsedData(null);
+        // Reset page number state when new file is dropped
+        setPageNumbers("");
+        setIsPageNumberComplete(false);
       }
       setPdfUrl(null);
     }
@@ -1373,9 +1385,12 @@ export default function Upload() {
                   manualError && !pageNumbers.trim()
                     ? "border-red-500"
                     : "border-gray-600"
-                } rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                } rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  manualLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 required
                 autoFocus={selectedMode === "manual" && !isPageNumberComplete}
+                disabled={manualLoading}
               />
               <div className="flex flex-col text-sm">
                 <p className="text-gray-400">
